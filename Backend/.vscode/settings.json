@@ -1,0 +1,14 @@
+{
+  "sqltools.connections": [
+    {
+      "previewLimit": 50,
+      "server": "localhost",
+      "port": 5432,
+      "driver": "PostgreSQL",
+      "name": "raindb",
+      "database": "raindb",
+      "username": "abdulmalik",
+      "password": "0213748346Ll!"
+    }
+  ]
+}
