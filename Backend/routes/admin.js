@@ -3,12 +3,18 @@ const { Router } = require("express");
 const pool = require("../db");
 const router = Router();
 
-// methods
+// routes and methods
+router.all("/", (request, response, next) => {
+  response.header("Access-Control-Allow-Origin", "*");
+  response.header("Access-Control-Allow-Headers", "X-Requested-With");
+  next();
+});
+
 router
   .route("/")
   // show all admin users
   .get((request, response, next) => {
-    pool.query("SELECT * FROM admin", (err, res) => {
+    pool.query("SELECT * FROM admin ORDER BY id DESC", (err, res) => {
       if (err) return next(err);
 
       response.json(res.rows);
@@ -21,8 +27,11 @@ router
       email,
       password,
     ]);
-
-    response.send("added admin");
+    // response.type("json");
+    response.json();
+    // response.redirect("http://localhost:2500/employee");
+    // response.send("added");
+    // response.send("added admin");
   });
 
 router
@@ -61,7 +70,8 @@ router
     pool.query("DELETE FROM admin WHERE email=($1)", [email], (err, res) => {
       if (err) return next(err);
 
-      response.send(`deleted admin ${email} `);
+      // response.send(`deleted admin ${email} `);
+      response.json();
     });
   });
 
