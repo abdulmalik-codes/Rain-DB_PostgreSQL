@@ -1,6 +1,7 @@
 <!-- options admin or employees -->
-<div class="container text-center">
+<div class="container text-center py-5 h-100">
   <div class="row">
+    <!-- admin -->
     <div class="col card mt-3">
       <div class="card-body">
         <h5 class="card-title">Admins</h5>
@@ -13,19 +14,24 @@
       </div>
     </div>
 
+    <!-- employees -->
     <div class="col card mt-3">
       <div class="card-body">
         <h5 class="card-title">Employees</h5>
         <p class="card-text">Access Rain employees details</p>
 
         <div class="btn-group">
-          <a class="btn btn-primary">View</a>
-          <a (click)="onShowAdmins()" class="btn btn-success">Add</a>
+          <a (click)="onShowEmployees()" class="btn btn-primary">View</a>
+          <a (click)="onShowAddEmployees()" class="btn btn-success">Add</a>
         </div>
       </div>
     </div>
   </div>
 </div>
+
+<!--  ********************************************************************  -->
+<!--   *************************** ADMINS ***************************  -->
+<!--  ********************************************************************  -->
 
 <!-- add admin -->
 
@@ -75,53 +81,451 @@
       </a>
     </div>
   </div>
+
+  <!-- no admins -->
+  <div *ngIf="aLLAdmins.length == 0" class="container text-center m-5">
+    <p>No admins in the data base</p>
+  </div>
 </div>
 
 <!-- single admin -->
-<div class="container">
+<div
+  class="container d-flex flex-wrap justify-content-center text-center"
+  *ngIf="showSingleAdmin"
+>
+  <div *ngFor="let admin of singleAdmin" class="card m-2" style="width: 300px">
+    <div *ngIf="editOptions">
+      <div class="card-body">
+        <h5 class="card-title">{{ admin.email }}</h5>
+        <p class="card-text">
+          {{ admin.password }}
+        </p>
+      </div>
+      <div class="btn-group">
+        <a (click)="onShowEditAdmin()" class="btn btn-info">Edit</a>
+        <a (click)="onDelete(admin.email)" class="btn btn-danger">Delete</a>
+        <a (click)="onCancel()" class="btn btn-warning">Cancel</a>
+      </div>
+    </div>
+    <div *ngIf="editCard">
+      <form
+        #adminFormEdit="ngForm"
+        (ngSubmit)="onSaveEdit(adminFormEdit.value); onSendSave(admin.email)"
+        class="card-body"
+      >
+        <div class="form-group">
+          <input
+            class="form-control"
+            id="password"
+            ngModel
+            name="password"
+            type="text"
+            [(ngModel)]="admin.password"
+          />
+        </div>
+
+        <div class="btn-group">
+          <button class="btn btn-success">
+            <!-- (click)="onSaveEdit(admin.password)" -->
+            save
+          </button>
+          <button type="button" (click)="onCancelEdit()" class="btn btn-danger">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ********************************************************************  -->
+<!-- *************************** EMPLOYEES ***************************  -->
+<!-- ********************************************************************  -->
+
+<div class="container d-flex justify-content-center text-center">
+  <!-- display employees -->
   <div
-    class="container d-flex flex-wrap justify-content-center text-center"
-    *ngIf="showSingleAdmin"
+    *ngIf="showEmployees"
+    class="container d-flex justify-content-center text-center m-2 flex-wrap"
   >
+    <p *ngIf="employees.length == 0" class="text-center m-5">
+      Database has no employees
+    </p>
+
     <div
-      *ngFor="let admin of singleAdmin"
-      class="card m-2"
+      *ngFor="let employee of employees"
+      class="card m-5"
       style="width: 300px"
     >
-      <div *ngIf="editOptions">
+      <div class="card-body">
+        <img
+          src="../../assets/admin/person_icon.jpg"
+          alt="avatar"
+          class="rounded-circle img-fluid"
+        />
+
+        <h5 class="my-3">{{ employee.name }} {{ employee.surname }}</h5>
+
+        <p class="text-muted mb-1">{{ employee.position }}</p>
+        <p class="text-muted mb-4">{{ employee.email }}</p>
+        <a (click)="onShowEmployee(employee.email)" class="btn btn-primary"
+          >View</a
+        >
+      </div>
+    </div>
+  </div>
+
+  <!-- add employees -->
+  <div *ngIf="showAddEmployee">
+    <form #employeeForm="ngForm" (ngSubmit)="onAddEmployee(employeeForm.value)">
+      <div class="card m-5" style="width: 500px">
+        <h5 class="card-title m-2">Add Employee</h5>
         <div class="card-body">
-          <h5 class="card-title">{{ admin.email }}</h5>
-          <p class="card-text">
-            {{ admin.password }}
-          </p>
-        </div>
-        <div class="btn-group">
-          <a (click)="onShowEditAdmin()" class="btn btn-info">Edit</a>
-          <a (click)="onDelete(admin.email)" class="btn btn-danger">Delete</a>
-          <a (click)="onCancel()" class="btn btn-primary">Cancel</a>
+          <div class="row">
+            <div class="col-sm-3">
+              <p class="mb-0">Name</p>
+            </div>
+            <div class="col-sm-9">
+              <input
+                ngModel
+                id="name"
+                name="name"
+                class="form-control text-muted mb-0"
+                type="text"
+              />
+            </div>
+          </div>
+          <hr />
+          <div class="row">
+            <div class="col-sm-3">
+              <p class="mb-0">Surname</p>
+            </div>
+            <div class="col-sm-9">
+              <input
+                ngModel
+                id="surname"
+                name="surname"
+                class="form-control text-muted mb-0"
+                type="text"
+              />
+            </div>
+          </div>
+          <hr />
+          <div class="row">
+            <div class="col-sm-3">
+              <p class="mb-0">Cell</p>
+            </div>
+            <div class="col-sm-9">
+              <input
+                ngModel
+                id="cell"
+                name="cell"
+                class="form-control text-muted mb-0"
+                type="text"
+              />
+            </div>
+          </div>
+          <hr />
+          <div class="row">
+            <div class="col-sm-3">
+              <p class="mb-0">Position</p>
+            </div>
+            <div class="col-sm-9">
+              <input
+                ngModel
+                id="position"
+                name="position"
+                class="form-control text-muted mb-0"
+                type="text"
+              />
+            </div>
+          </div>
+          <hr />
+          <div class="row">
+            <div class="col-sm-3">
+              <p class="mb-0">Email</p>
+            </div>
+            <div class="col-sm-9">
+              <input
+                ngModel
+                id="email"
+                name="email"
+                class="form-control text-muted mb-0"
+                type="text"
+              />
+            </div>
+          </div>
+          <hr />
+          <div class="row">
+            <div class="col-sm-3">
+              <p class="mb-0">Password</p>
+            </div>
+            <div class="col-sm-9">
+              <input
+                ngModel
+                id="password"
+                name="password"
+                class="form-control text-muted mb-0"
+                type="text"
+              />
+            </div>
+          </div>
+          <!--
+            <hr />
+            <div class="row">
+            <div class="col-sm-3">
+              <p class="mb-0">Profile Picture</p>
+            </div>
+            <div class="col-sm-9">
+              <input type="file" class="form-control text-muted mb-0" />
+            </div>
+          </div> -->
+
+          <div class="btn-group m-2">
+            <button class="btn btn-success">Submit</button>
+            <button class="btn btn-danger">Cancel</button>
+          </div>
         </div>
       </div>
-      <div *ngIf="editCard">
-        <form
-          #adminFormEdit="ngForm"
-          (ngSubmit)="onSaveEdit(adminFormEdit.value)"
-          class="card-body"
-        >
-          <div class="form-group">
-            <input
-              class="form-control"
-              id="password"
-              ngModel
-              name="password"
-              type="text"
-              [(ngModel)]="admin.password"
-            />
-          </div>
+    </form>
+  </div>
+  <!-- display single employee -->
+  <div *ngIf="showEmployee">
+    <div *ngFor="let employee of employee">
+      <div class="container py-5">
+        <div class="row">
+          <div class="col-lg-4">
+            <div class="card mb-4">
+              <div class="card-body">
+                <img
+                  src="../../assets/admin/person_icon.jpg"
+                  alt="avatar"
+                  class="rounded-circle img-fluid"
+                />
 
-          <div (click)="onSaveEdit(admin.email)" class="btn btn-success">
-            save
+                <h5 class="my-3">{{ employee.name }} {{ employee.surname }}</h5>
+
+                <p class="text-muted mb-1">{{ employee.position }}</p>
+                <p class="text-muted mb-4">{{ employee.email }}</p>
+                <div
+                  *ngIf="EditEmployeeButtons"
+                  class="d-flex justify-content-center mb-2"
+                >
+                  <button
+                    (click)="showEditOptions()"
+                    type="button"
+                    class="btn btn-outline-primary"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    (click)="onDeleteEmployee(employee.email)"
+                    type="button"
+                    class="btn btn-outline-danger ms-1"
+                  >
+                    Delete
+                  </button>
+                  <button
+                    (click)="onCancelViewEmployee()"
+                    type="button"
+                    class="btn btn-danger ms-1"
+                  >
+                    Cancel
+                  </button>
+                </div>
+                <div
+                  *ngIf="saveEmployeeButtons"
+                  class="d-flex justify-content-center mb-2"
+                >
+                  <button
+                    (click)="showEditOptions()"
+                    type="button"
+                    class="btn btn-outline-success"
+                  >
+                    Save
+                  </button>
+                  <button
+                    (click)="onCancelEditEmployee()"
+                    type="button"
+                    class="btn btn-outline-danger ms-1"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
-        </form>
+          <div class="col-lg-8">
+            <div class="card mb-4">
+              <div *ngIf="showEmployeeDetails" class="card-body">
+                <div class="row">
+                  <div class="col-sm-3">
+                    <p class="mb-0">Full Name</p>
+                  </div>
+                  <div class="col-sm-9">
+                    <p class="text-muted mb-0">
+                      {{ employee.name }} {{ employee.surname }}
+                    </p>
+                  </div>
+                </div>
+                <hr />
+                <div class="row">
+                  <div class="col-sm-3">
+                    <p class="mb-0">Cell</p>
+                  </div>
+                  <div class="col-sm-9">
+                    <p class="text-muted mb-0">
+                      {{ employee.cell }}
+                    </p>
+                  </div>
+                </div>
+                <hr />
+                <div class="row">
+                  <div class="col-sm-3">
+                    <p class="mb-0">Position</p>
+                  </div>
+                  <div class="col-sm-9">
+                    <p class="text-muted mb-0">
+                      {{ employee.position }}
+                    </p>
+                  </div>
+                </div>
+                <hr />
+                <div class="row">
+                  <div class="col-sm-3">
+                    <p class="mb-0">Email</p>
+                  </div>
+                  <div class="col-sm-9">
+                    <p class="text-muted mb-0">
+                      {{ employee.email }}
+                    </p>
+                  </div>
+                </div>
+                <hr />
+                <div class="row">
+                  <div class="col-sm-3">
+                    <p class="mb-0">Password</p>
+                  </div>
+                  <div class="col-sm-9">
+                    <p class="text-muted mb-0">
+                      {{ employee.password }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- edit employee -->
+              <div *ngIf="showEditEmployee" class="card-body">
+                <form>
+                  <div class="row">
+                    <div class="col-sm-3">
+                      <p class="mb-0">Name</p>
+                    </div>
+                    <div class="col-sm-9">
+                      <input
+                        [(ngModel)]="employee.name"
+                        ngModel
+                        id="name"
+                        name="name"
+                        class="form-control text-muted mb-0"
+                        type="text"
+                      />
+                    </div>
+                  </div>
+                  <hr />
+                  <div class="row">
+                    <div class="col-sm-3">
+                      <p class="mb-0">Surname</p>
+                    </div>
+                    <div class="col-sm-9">
+                      <input
+                        [(ngModel)]="employee.surname"
+                        ngModel
+                        id="surname"
+                        name="surname"
+                        class="form-control text-muted mb-0"
+                        type="text"
+                      />
+                    </div>
+                  </div>
+                  <hr />
+                  <div class="row">
+                    <div class="col-sm-3">
+                      <p class="mb-0">Cell</p>
+                    </div>
+                    <div class="col-sm-9">
+                      <input
+                        [(ngModel)]="employee.cell"
+                        ngModel
+                        id="cell"
+                        name="cell"
+                        class="form-control text-muted mb-0"
+                        type="text"
+                      />
+                    </div>
+                  </div>
+                  <hr />
+                  <div class="row">
+                    <div class="col-sm-3">
+                      <p class="mb-0">Position</p>
+                    </div>
+                    <div class="col-sm-9">
+                      <input
+                        [(ngModel)]="employee.position"
+                        ngModel
+                        id="position"
+                        name="position"
+                        class="form-control text-muted mb-0"
+                        type="text"
+                      />
+                    </div>
+                  </div>
+                  <hr />
+                  <div class="row">
+                    <div class="col-sm-3">
+                      <p class="mb-0">Email</p>
+                    </div>
+                    <div class="col-sm-9">
+                      <input
+                        [(ngModel)]="employee.email"
+                        ngModel
+                        id="email"
+                        name="email"
+                        class="form-control text-muted mb-0"
+                        type="text"
+                      />
+                    </div>
+                  </div>
+                  <hr />
+                  <div class="row">
+                    <div class="col-sm-3">
+                      <p class="mb-0">Password</p>
+                    </div>
+                    <div class="col-sm-9">
+                      <input
+                        [(ngModel)]="employee.password"
+                        ngModel
+                        id="password"
+                        name="password"
+                        class="form-control text-muted mb-0"
+                        type="text"
+                      />
+                    </div>
+                  </div>
+                  <hr />
+                  <div class="row">
+                    <div class="col-sm-3">
+                      <p class="mb-0">Profile Picture</p>
+                    </div>
+                    <div class="col-sm-9">
+                      <input type="file" class="form-control text-muted mb-0" />
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>

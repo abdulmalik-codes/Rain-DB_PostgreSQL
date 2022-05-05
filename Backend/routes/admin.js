@@ -89,15 +89,16 @@ router
   })
   // add employee
   .post((request, response, next) => {
-    const { fullname, email, password } = request.body;
+    const { name, surname, cell, position, email, password } = request.body;
 
     pool.query(
-      "INSERT INTO employees(fullname, email, password) VALUES($1, $2, $3)",
-      [fullname, email, password],
+      "INSERT INTO employees(name, surname, cell, position, email, password) VALUES($1, $2, $3, $4, $5, $6)",
+      [name, surname, cell, position, email, password],
       (err, res) => {
         if (err) return next(err);
 
-        response.send("Employee Added");
+        // response.send("Employee Added");
+        response.json(email + " Added");
       }
     );
   })
@@ -144,7 +145,8 @@ router
           (err, res) => {
             if (err) return next(err);
 
-            response.send("employee details updated");
+            // response.send("employee details updated");
+            response.json();
           }
         );
       });
@@ -160,7 +162,8 @@ router
       (err, res) => {
         if (err) return next(err);
 
-        response.send("Employee deleted");
+        // response.send("Employee deleted");
+        response.json();
       }
     );
   });
@@ -196,23 +199,6 @@ router.route("/login").post((request, response, next) => {
 });
 
 module.exports = router;
-
-/*
-
-  router.route("/login").post((request, response, next) => {
-  const { email } = request.body;
-  
-  pool.query("SELECT * FROM admin WHERE email=$1", [email], (err, res) => {
-    if (err) return next(err);
-
-    response.send("logged in admin");
-
-    // response.json(res.rows);
-  });
-});
-
-
-*/
 
 /*
 

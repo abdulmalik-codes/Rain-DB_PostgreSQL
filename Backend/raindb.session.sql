@@ -4,12 +4,15 @@
 --     password character varying(50)
 -- );
 
--- CREATE TABLE employees(
---     id serial,
---     fullname character varying(100),
---     email character varying(100),
---     password character varying(50)
--- );
+CREATE TABLE employees(
+    id serial,
+    name character varying(50),
+    surname character varying(50),
+    cell character varying(10),
+    position character varying(100),
+    email character varying(100),
+    password character varying(50)
+);
 
 -- INSERT INTO admin(email, password)
 -- VALUES
