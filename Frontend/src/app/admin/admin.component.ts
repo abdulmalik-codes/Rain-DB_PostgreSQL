@@ -9,28 +9,71 @@ import { Admin, Employee } from './admin.model';
   styleUrls: ['./admin.component.css'],
 })
 export class AdminComponent implements OnInit {
-  // ******************************************************************** //
-  //  *************************** ADMINS *************************** //
-  // ******************************************************************** //
-  adminsUrl = 'http://localhost:3000/admin';
-
-  showAdmin = false;
-  showAddAmin = false;
-  showSingleAdmin = false;
-
-  editOptions = true;
-  editCard = false;
-  password = '';
-
-  aLLAdmins: Admin[] = [];
-  singleAdmin: Admin[] = [];
-
   constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
     this.fetchAllAdmin();
+    this.fetchEmployees();
   }
 
+  // ******************************************************************** //
+  //  *************************** ADMINS *************************** //
+  // ******************************************************************** //
+  adminsView = false;
+
+  // all admins
+
+  showAdmin = false;
+
+  admins: Admin[] = [];
+
+  adminsUrl = 'http://localhost:3000/admin';
+
+  // add admin
+  showAddAdmin = false;
+
+  onShowAddAdmin() {
+    this.adminsView = true;
+    this.employeesView = false;
+
+    this.showAddAdmin = !this.showAddAdmin;
+    this.showAdmin = false;
+    this.showEmployees = false;
+
+    this.showEmployee = false;
+    this.showAddEmployee = false;
+  }
+
+  onAddAdmin(adminData: Admin) {
+    this.http
+      .post(this.adminsUrl, adminData, { responseType: 'json' })
+      .subscribe((responseData) => {
+        console.log(responseData);
+      });
+
+    this.fetchAllAdmin();
+    this.showAddAdmin = false;
+    alert(`${adminData.email} added successfully`);
+  }
+
+  onCancelAddAdmin() {
+    this.showAddAdmin = false;
+    this.showAdmin = true;
+  }
+
+  // view all admin users from postgres db
+  onShowAdmins() {
+    this.fetchAllAdmin();
+    this.adminsView = true;
+    this.employeesView = false;
+
+    this.showAdmin = !this.showAdmin;
+    this.showAddAdmin = false;
+    this.showSingleAdmin = false;
+
+    this.showEmployees = false;
+    this.showEmployee = false;
+  }
   onFetchAllAdmin() {
     this.fetchAllAdmin();
   }
@@ -51,11 +94,17 @@ export class AdminComponent implements OnInit {
         })
       )
       .subscribe((admin) => {
-        this.aLLAdmins = admin;
+        this.admins = admin;
       });
   }
 
-  onSelectAdmin(getAdmin: any) {
+  // view single admin
+
+  showSingleAdmin = false;
+
+  admin: Admin[] = [];
+
+  onShowAdmin(getAdmin: any) {
     this.showAdmin = false;
     this.showSingleAdmin = true;
     this.fetchAdmin(getAdmin);
@@ -79,71 +128,60 @@ export class AdminComponent implements OnInit {
         })
       )
       .subscribe((admin) => {
-        this.singleAdmin = admin;
+        this.admin = admin;
       });
   }
 
-  onShowAdmins() {
-    this.fetchAllAdmin();
-    this.showAdmin = !this.showAdmin;
-    this.showAddAmin = false;
-    this.showSingleAdmin = false;
-
-    this.showEmployees = false;
-    this.showEmployee = false;
-  }
-
-  onShowAddAdmin() {
-    this.showAddAmin = !this.showAddAmin;
-    this.showAdmin = false;
-    this.showEmployees = false;
-
-    this.showEmployee = false;
-  }
-
-  onAddAdmin(adminData: Admin) {
-    this.http
-      .post(this.adminsUrl, adminData, { responseType: 'json' })
-      .subscribe((responseData) => {
-        console.log(responseData);
-      });
-
-    this.fetchAllAdmin();
-    this.showAddAmin = false;
-    alert(`${adminData.email} added successfully`);
-  }
+  // edit admin options
+  showEditAdmin = false;
+  showAdminDetails = true;
+  editOptions = true;
+  editCard = false;
 
   onShowEditAdmin() {
-    this.editCard = true;
+    this.showEditAdmin = true;
     this.editOptions = false;
+    this.showAdminDetails = false;
   }
 
-  onSaveEdit(editAdmin: string) {
-    alert('edit');
-
-    this.showAdmin = true;
-    this.editCard = false;
+  password: any;
+  updateAdmin(e: any) {
+    this.password = e.target.value;
   }
 
-  onSendSave(adminEmail: any) {
+  onEditAdmin(editAdmin: string) {
+    let responseBody = {
+      password: this.password,
+    };
     this.http
-      .put(
-        `http://localhost:3000/admin/${adminEmail}`,
-        { password: this.password },
-        {
-          responseType: 'json',
-        }
-      )
+      .put(`http://localhost:3000/admin/${editAdmin}`, responseBody, {
+        responseType: 'json',
+      })
       .subscribe((responseData) => {
         console.log(responseData);
       });
+
+    alert(`${editAdmin}'s password has been updated successfully`);
+
+    this.showEditAdmin = false;
+    this.showAdminDetails = true;
+    this.editOptions = true;
   }
 
   onCancelEdit() {
     this.editCard = false;
     this.editOptions = true;
+    this.showEditAdmin = false;
+    this.showAdminDetails = true;
   }
 
+  // single admin
+  onCancel() {
+    this.showAdmin = true;
+    this.showSingleAdmin = false;
+  }
+
+  // delete admin
   onDelete(deleteAdmin: string) {
     if (confirm(`Are you sure you want to delete ${deleteAdmin}?`) == true) {
       this.http
@@ -160,16 +198,13 @@ export class AdminComponent implements OnInit {
     this.showSingleAdmin = false;
   }
 
-  onCancel() {
-    this.showAdmin = true;
-    this.showSingleAdmin = false;
-  }
-
   // ******************************************************************** //
   //  *************************** EMPLOYEES *************************** //
   // ******************************************************************** //
 
-  // show all employees from db
+  employeesView = false;
+
+  // all employees
 
   showEmployees = false;
 
@@ -177,14 +212,51 @@ export class AdminComponent implements OnInit {
 
   employeesUrl = `http://localhost:3000/admin/view/employees`;
 
+  // add employees to db
+  showAddEmployee = false;
+
+  onShowAddEmployees() {
+    this.employeesView = true;
+    this.adminsView = false;
+
+    this.showAddEmployee = !this.showAddEmployee;
+    this.showEmployees = false;
+    this.showEmployee = false;
+
+    this.showAdmin = false;
+    this.showAddAdmin = false;
+  }
+
+  onAddEmployee(employeeData: Employee) {
+    this.http
+      .post(this.employeesUrl, employeeData, { responseType: 'json' })
+      .subscribe((responseData) => {
+        console.log(responseData);
+      });
+
+    this.fetchEmployees();
+    this.showAddEmployee = false;
+    alert(`${employeeData.email} added successfully`);
+  }
+
+  onCancelAddEmployee() {
+    this.showAddEmployee = false;
+    this.showEmployees = true;
+  }
+
+  // show all employees from db
   onShowEmployees() {
-    this.showAddAmin = false;
+    this.fetchEmployees();
+    this.employeesView = true;
+    this.adminsView = false;
+
+    this.employeesView = true;
+    this.showAddAdmin = false;
     this.showAdmin = false;
     this.showSingleAdmin = false;
     this.showEmployees = !this.showEmployees;
     this.showEmployee = false;
-
-    this.fetchEmployees();
+    this.showAddEmployee = false;
   }
 
   fetchEmployees() {
@@ -207,14 +279,13 @@ export class AdminComponent implements OnInit {
   }
 
   // view single employee
-
   showEmployee = false;
 
   employee: Employee[] = [];
 
   onShowEmployee(employee: string) {
-    this.showEmployee = true;
     this.showEmployees = false;
+    this.showEmployee = true;
     this.fetchEmployee(employee);
   }
 
@@ -255,6 +326,58 @@ export class AdminComponent implements OnInit {
     this.EditEmployeeButtons = false;
     this.saveEmployeeButtons = true;
   }
+  // get input values
+  employeeName: any;
+  updateEmployeeName(n: any) {
+    this.employeeName = n.target.value;
+  }
+
+  employeeSurname: any;
+  updateEmployeeSurname(s: any) {
+    this.employeeSurname = s.target.value;
+  }
+
+  employeeCell: any;
+  updateEmployeeCell(c: any) {
+    this.employeeCell = c.target.value;
+  }
+
+  employeePosition: any;
+  updateEmployeePosition(po: any) {
+    this.employeePosition = po.target.value;
+  }
+
+  employeePassword: any;
+  updateEmployeePassword(pa: any) {
+    this.employeePassword = pa.target.value;
+  }
+
+  onEditEmployee(employeeEmail: string) {
+    let responseBody = {
+      name: this.employeeName,
+      surname: this.employeeSurname,
+      cell: this.employeeCell,
+      position: this.employeePosition,
+      password: this.employeePassword,
+    };
+
+    this.http
+      .put(
+        `http://localhost:3000/admin/employee/${employeeEmail}`,
+        responseBody,
+        { responseType: 'json' }
+      )
+      .subscribe((responseData) => {
+        console.log(responseData);
+      });
+
+    alert(`Employee ${employeeEmail} updated successfully`);
+
+    this.showEditEmployee = false;
+    this.showEmployeeDetails = true;
+    this.showEmployee = true;
+    this.EditEmployeeButtons = true;
+  }
 
   onCancelEditEmployee() {
     this.showEditEmployee = false;
@@ -264,37 +387,13 @@ export class AdminComponent implements OnInit {
     this.saveEmployeeButtons = false;
   }
 
+  // single employee
   onCancelViewEmployee() {
     this.showEmployee = false;
     this.showEmployees = true;
   }
 
-  // add employees to db
-
-  showAddEmployee = false;
-
-  employeeUrl = `http://localhost:3000/admin/view/employees`;
-
-  onShowAddEmployees() {
-    this.showAddEmployee = !this.showAddEmployee;
-    this.showEmployees = false;
-    this.showEmployee = false;
-  }
-
-  onAddEmployee(employeeData: Employee) {
-    this.http
-      .post(this.employeeUrl, employeeData, { responseType: 'json' })
-      .subscribe((responseData) => {
-        console.log(responseData);
-      });
-
-    this.fetchEmployees();
-    this.showAddEmployee = false;
-    alert(`${employeeData.email} added successfully`);
-  }
-
   // delete employee
-
   onDeleteEmployee(deleteEmployee: string) {
     if (
       confirm(`Are you sure you want to delete employee ${deleteEmployee}?`) ==

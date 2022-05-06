@@ -1,1 +1,1 @@
--- DROP TABLE employees
+DROP TABLE admin

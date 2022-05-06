@@ -58,7 +58,8 @@ router
         (err, res) => {
           if (err) return next(err);
 
-          response.send("admin updated");
+          // response.send("admin updated");
+          response.json(password + " updated");
         }
       );
     }
@@ -81,7 +82,7 @@ router
   .route("/view/employees")
   // view all employees
   .get((request, response, next) => {
-    pool.query("SELECT * FROM employees", (err, res) => {
+    pool.query("SELECT * FROM employees ORDER BY id DESC", (err, res) => {
       if (err) return next(err);
 
       response.json(res.rows);
@@ -131,7 +132,7 @@ router
   .put((request, response) => {
     const { email } = request.params;
 
-    const keys = ["fullname", "password"];
+    const keys = ["name", "surname", "cell", "position", "password"];
 
     const details = [];
 
@@ -146,7 +147,8 @@ router
             if (err) return next(err);
 
             // response.send("employee details updated");
-            response.json();
+            // response.json(res);
+            // response.send("sent");
           }
         );
       });
