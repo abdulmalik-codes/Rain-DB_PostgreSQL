@@ -8,8 +8,8 @@
         <p class="card-text">Rain Admin details</p>
 
         <div class="btn-group">
-          <a (click)="onShowAdmins()" class="btn btn-primary">View</a>
-          <a (click)="onShowAddAdmin()" class="btn btn-success">Add</a>
+          <a (click)="onShowAdmins()" class="btn btn-outline-primary">View</a>
+          <a (click)="onShowAddAdmin()" class="btn btn-outline-success">Add</a>
         </div>
       </div>
     </div>
@@ -21,8 +21,12 @@
         <p class="card-text">Access Rain employees details</p>
 
         <div class="btn-group">
-          <a (click)="onShowEmployees()" class="btn btn-primary">View</a>
-          <a (click)="onShowAddEmployees()" class="btn btn-success">Add</a>
+          <a (click)="onShowEmployees()" class="btn btn-outline-primary"
+            >View</a
+          >
+          <a (click)="onShowAddEmployees()" class="btn btn-outline-success"
+            >Add</a
+          >
         </div>
       </div>
     </div>
@@ -52,7 +56,7 @@
 
         <h5 class="my-3">{{ admins.email }}</h5>
 
-        <a (click)="onShowAdmin(admins.email)" class="btn btn-primary">
+        <a (click)="onShowAdmin(admins.email)" class="btn btn-outline-primary">
           View
         </a>
       </div>
@@ -71,6 +75,7 @@
             </div>
             <div class="col-sm-9">
               <input
+                required
                 ngModel
                 id="email"
                 name="email"
@@ -86,6 +91,7 @@
             </div>
             <div class="col-sm-9">
               <input
+                required
                 ngModel
                 id="password"
                 name="password"
@@ -96,7 +102,7 @@
           </div>
         </div>
         <div class="btn-group">
-          <button class="btn btn-success">Add Admin</button>
+          <button class="btn btn-outline-success">Add Admin</button>
           <button
             (click)="onCancelAddAdmin()"
             type="button"
@@ -199,6 +205,7 @@
                         name="password"
                         class="form-control text-muted mb-0"
                         type="text"
+                        required
                       />
                     </div>
                   </div>
@@ -255,7 +262,9 @@
 
         <p class="text-muted mb-1">{{ employee.position }}</p>
         <p class="text-muted mb-4">{{ employee.email }}</p>
-        <a (click)="onShowEmployee(employee.email)" class="btn btn-primary"
+        <a
+          (click)="onShowEmployee(employee.email)"
+          class="btn btn-outline-primary"
           >View</a
         >
       </div>
@@ -279,6 +288,7 @@
                 name="name"
                 class="form-control text-muted mb-0"
                 type="text"
+                required
               />
             </div>
           </div>
@@ -294,6 +304,7 @@
                 name="surname"
                 class="form-control text-muted mb-0"
                 type="text"
+                required
               />
             </div>
           </div>
@@ -309,6 +320,7 @@
                 name="cell"
                 class="form-control text-muted mb-0"
                 type="text"
+                required
               />
             </div>
           </div>
@@ -324,6 +336,7 @@
                 name="position"
                 class="form-control text-muted mb-0"
                 type="text"
+                required
               />
             </div>
           </div>
@@ -338,7 +351,8 @@
                 id="email"
                 name="email"
                 class="form-control text-muted mb-0"
-                type="text"
+                type="email"
+                required
               />
             </div>
           </div>
@@ -353,20 +367,28 @@
                 id="password"
                 name="password"
                 class="form-control text-muted mb-0"
-                type="text"
+                type="password"
+                required
               />
             </div>
           </div>
-          <!--
-            <hr />
-            <div class="row">
+
+          <hr />
+          <div class="row">
             <div class="col-sm-3">
               <p class="mb-0">Profile Picture</p>
             </div>
             <div class="col-sm-9">
-              <input type="file" class="form-control text-muted mb-0" />
+              <input
+                ngModel
+                id="image"
+                name="image"
+                class="form-control text-muted mb-0"
+                type="file"
+                required
+              />
             </div>
-          </div> -->
+          </div>
         </div>
         <div class="btn-group m-2">
           <button class="btn btn-success">Add Employee</button>
@@ -506,6 +528,7 @@
                         name="name"
                         class="form-control text-muted mb-0"
                         type="text"
+                        required
                       />
                     </div>
                   </div>
@@ -523,6 +546,7 @@
                         name="surname"
                         class="form-control text-muted mb-0"
                         type="text"
+                        required
                       />
                     </div>
                   </div>
@@ -540,6 +564,7 @@
                         name="cell"
                         class="form-control text-muted mb-0"
                         type="text"
+                        required
                       />
                     </div>
                   </div>
@@ -557,6 +582,7 @@
                         name="position"
                         class="form-control text-muted mb-0"
                         type="text"
+                        required
                       />
                     </div>
                   </div>
@@ -575,6 +601,7 @@
                         name="password"
                         class="form-control text-muted mb-0"
                         type="text"
+                        required
                       />
                     </div>
                   </div>

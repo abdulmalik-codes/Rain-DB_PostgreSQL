@@ -6,6 +6,6 @@ const employee = require("./employee");
 const router = Router();
 
 router.use("/admin", admin);
-// router.use("/employee", employee);
+router.use("/employee", employee);
 
 module.exports = router;

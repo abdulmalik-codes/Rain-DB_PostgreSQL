@@ -1,1 +1,295 @@
-<p>employee works!</p>
+<div class="container d-flex justify-content-center text-center">
+  <div *ngFor="let employee of employee">
+    <h1 class="m-2">
+      Welcome Back
+      {{ employee.name }}
+    </h1>
+
+    <div class="d-flex flex-wrap m-2">
+      <!-- employee card -->
+      <div *ngIf="employeeCard" class="card m-5" style="width: 300px">
+        <div class="card-body card shadow">
+          <img
+            src="../../assets/admin/person_icon2.png"
+            alt="employee"
+            class="rounded-circle img-fluid"
+          />
+
+          <h5 class="my-3">{{ employee.name }} {{ employee.surname }}</h5>
+
+          <p class="text-muted mb-1">{{ employee.position }}</p>
+          <p class="text-muted mb-4">{{ employee.email }}</p>
+          <a (click)="onShowEmployee()" class="btn btn-outline-primary">View</a>
+        </div>
+      </div>
+
+      <!-- messages -->
+      <div *ngIf="showMessages" class="card m-5" style="width: 300px">
+        <div class="card-body card shadow">
+          <img
+            src="../../assets/admin/messages.png"
+            alt="messages"
+            class="rounded-circle img-fluid"
+          />
+
+          <h5 class="my-3">Messages</h5>
+
+          <p class="text-muted mb-1">What's happening</p>
+          <p class="text-muted mb-4">Stay up to date</p>
+          <a class="btn btn-outline-primary">View</a>
+        </div>
+      </div>
+
+      <!-- tasks -->
+      <div *ngIf="showTasks" class="card m-5" style="width: 300px">
+        <div class="card-body card shadow">
+          <img
+            src="../../assets/admin/tasks.png"
+            alt="tasks"
+            class="rounded-circle img-fluid"
+          />
+
+          <h5 class="my-3">Tasks</h5>
+
+          <p class="text-muted mb-1">To Do</p>
+          <p class="text-muted mb-4">All your tasks here</p>
+          <a class="btn btn-outline-primary">View</a>
+        </div>
+      </div>
+
+      <!-- ***************** -->
+      <div *ngIf="showEmployee">
+        <div>
+          <div class="container py-5">
+            <div class="row">
+              <div class="col-lg-4">
+                <div class="card mb-4">
+                  <!--  -->
+                  <div class="card-body card shadow">
+                    <img
+                      src="../../assets/admin/person_icon.jpg"
+                      alt="avatar"
+                      class="rounded-circle img-fluid"
+                    />
+
+                    <h5 class="my-3">
+                      {{ employee.name }} {{ employee.surname }}
+                    </h5>
+
+                    <p class="text-muted mb-1">{{ employee.position }}</p>
+                    <p class="text-muted mb-4">{{ employee.email }}</p>
+                    <div
+                      *ngIf="!editEmployee"
+                      class="d-flex justify-content-center mb-2"
+                    >
+                      <button
+                        (click)="onShowEdit()"
+                        type="button"
+                        class="btn btn-outline-primary"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        (click)="onCancelViewProfile()"
+                        type="button"
+                        class="btn btn-danger ms-1"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-lg-8">
+                <div class="card mb-4">
+                  <div *ngIf="showEmployeeDetails" class="card-body">
+                    <div class="row">
+                      <div class="col-sm-3">
+                        <p class="mb-0">Full Name</p>
+                      </div>
+                      <div class="col-sm-9">
+                        <p class="text-muted mb-0">
+                          {{ employee.name }} {{ employee.surname }}
+                        </p>
+                      </div>
+                    </div>
+                    <hr />
+                    <div class="row">
+                      <div class="col-sm-3">
+                        <p class="mb-0">Cell</p>
+                      </div>
+                      <div class="col-sm-9">
+                        <p class="text-muted mb-0">
+                          {{ employee.cell }}
+                        </p>
+                      </div>
+                    </div>
+                    <hr />
+                    <div class="row">
+                      <div class="col-sm-3">
+                        <p class="mb-0">Position</p>
+                      </div>
+                      <div class="col-sm-9">
+                        <p class="text-muted mb-0">
+                          {{ employee.position }}
+                        </p>
+                      </div>
+                    </div>
+                    <hr />
+                    <div class="row">
+                      <div class="col-sm-3">
+                        <p class="mb-0">Email</p>
+                      </div>
+                      <div class="col-sm-9">
+                        <p class="text-muted mb-0">
+                          {{ employee.email }}
+                        </p>
+                      </div>
+                    </div>
+                    <hr />
+                    <div class="row">
+                      <div class="col-sm-3">
+                        <p class="mb-0">Password</p>
+                      </div>
+                      <div class="col-sm-9">
+                        <p class="text-muted mb-0">
+                          {{ employee.password }}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- edit employee -->
+                  <div *ngIf="editEmployee" class="card-body">
+                    <form
+                      #employeeEditForm="ngForm"
+                      (ngSubmit)="onEditEmployee(employee.email)"
+                    >
+                      <div class="row">
+                        <div class="col-sm-3">
+                          <p class="mb-0">Name</p>
+                        </div>
+                        <div class="col-sm-9">
+                          <input
+                            [(ngModel)]="employee.name"
+                            (input)="updateEmployeeName($event)"
+                            ngModel
+                            id="name"
+                            name="name"
+                            class="form-control text-muted mb-0"
+                            type="text"
+                            required
+                          />
+                        </div>
+                      </div>
+                      <hr />
+                      <div class="row">
+                        <div class="col-sm-3">
+                          <p class="mb-0">Surname</p>
+                        </div>
+                        <div class="col-sm-9">
+                          <input
+                            [(ngModel)]="employee.surname"
+                            (input)="updateEmployeeSurname($event)"
+                            ngModel
+                            id="surname"
+                            name="surname"
+                            class="form-control text-muted mb-0"
+                            type="text"
+                            required
+                          />
+                        </div>
+                      </div>
+                      <hr />
+                      <div class="row">
+                        <div class="col-sm-3">
+                          <p class="mb-0">Cell</p>
+                        </div>
+                        <div class="col-sm-9">
+                          <input
+                            [(ngModel)]="employee.cell"
+                            (input)="updateEmployeeCell($event)"
+                            ngModel
+                            id="cell"
+                            name="cell"
+                            class="form-control text-muted mb-0"
+                            type="text"
+                            required
+                          />
+                        </div>
+                      </div>
+                      <hr />
+                      <div class="row">
+                        <div class="col-sm-3">
+                          <p class="mb-0">Position</p>
+                        </div>
+                        <div class="col-sm-9">
+                          <input
+                            [(ngModel)]="employee.position"
+                            (input)="updateEmployeePosition($event)"
+                            ngModel
+                            id="employeePosition"
+                            name="position"
+                            class="form-control text-muted mb-0"
+                            type="text"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <hr />
+                      <div class="row">
+                        <div class="col-sm-3">
+                          <p class="mb-0">Password</p>
+                        </div>
+                        <div class="col-sm-9">
+                          <input
+                            [(ngModel)]="employee.password"
+                            (input)="updateEmployeePassword($event)"
+                            ngModel
+                            id="employeePassword"
+                            name="password"
+                            class="form-control text-muted mb-0"
+                            type="text"
+                            required
+                          />
+                        </div>
+                      </div>
+                      <hr />
+                      <!--
+
+
+                        <div class="row">
+                        <div class="col-sm-3">
+                          <p class="mb-0">Profile Picture</p>
+                        </div>
+                        <div class="col-sm-9">
+                          <input type="file" class="form-control text-muted mb-0" />
+                        </div>
+                      </div>
+                      <hr />
+
+                       -->
+                      <div class="row">
+                        <div class="btn-group">
+                          <button class="btn btn-outline-success">Save</button>
+                          <button
+                            (click)="onCancelEdit()"
+                            type="button"
+                            class="btn btn-outline-danger ms-1"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

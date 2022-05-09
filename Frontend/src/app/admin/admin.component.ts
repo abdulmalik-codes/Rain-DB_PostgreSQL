@@ -38,6 +38,9 @@ export class AdminComponent implements OnInit {
 
     this.showAddAdmin = !this.showAddAdmin;
     this.showAdmin = false;
+
+    this.showSingleAdmin = false;
+
     this.showEmployees = false;
 
     this.showEmployee = false;

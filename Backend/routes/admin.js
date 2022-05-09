@@ -1,8 +1,15 @@
 // import modules
-const { Router } = require("express");
+const { Router, query } = require("express");
+const fileUpload = require("express-fileupload");
+
 const pool = require("../db");
 const router = Router();
+const util = require("util");
 
+const path = require("path");
+const { json } = require("body-parser");
+
+router.use(fileUpload());
 // routes and methods
 router.all("/", (request, response, next) => {
   response.header("Access-Control-Allow-Origin", "*");
@@ -90,7 +97,9 @@ router
   })
   // add employee
   .post((request, response, next) => {
+    // console.log("test", request.files.data);
     const { name, surname, cell, position, email, password } = request.body;
+    // const { data } = request.files.image;
 
     pool.query(
       "INSERT INTO employees(name, surname, cell, position, email, password) VALUES($1, $2, $3, $4, $5, $6)",
@@ -99,7 +108,7 @@ router
         if (err) return next(err);
 
         // response.send("Employee Added");
-        response.json(email + " Added");
+        // response.json(email + " Added");
       }
     );
   })
@@ -199,6 +208,8 @@ router.route("/login").post((request, response, next) => {
     // response.json(res.rows);
   });
 });
+
+// *******************************
 
 module.exports = router;
 
