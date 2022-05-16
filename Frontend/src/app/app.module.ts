@@ -1,5 +1,5 @@
 import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
+import { BrowserModule, Title } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 
@@ -11,6 +11,12 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { AdminComponent } from './admin/admin.component';
 import { EmployeeComponent } from './employee/employee.component';
 import { FooterComponent } from './footer/footer.component';
+import { ViewAdminComponent } from './admin/view-admin/view-admin.component';
+import { ViewEmployeeComponent } from './admin/view-employee/view-employee.component';
+import { ViewMessagesComponent } from './admin/view-messages/view-messages.component';
+import { ViewTasksComponent } from './admin/view-tasks/view-tasks.component';
+import { SingleAdminComponent } from './admin/view-admin/single-admin/single-admin.component';
+import { SingleEmployeeComponent } from './admin/view-employee/single-employee/single-employee.component';
 
 @NgModule({
   declarations: [
@@ -20,6 +26,12 @@ import { FooterComponent } from './footer/footer.component';
     AdminComponent,
     EmployeeComponent,
     FooterComponent,
+    ViewAdminComponent,
+    ViewEmployeeComponent,
+    ViewMessagesComponent,
+    ViewTasksComponent,
+    SingleAdminComponent,
+    SingleEmployeeComponent,
   ],
   imports: [
     BrowserModule,
@@ -28,7 +40,7 @@ import { FooterComponent } from './footer/footer.component';
     NgbModule,
     HttpClientModule,
   ],
-  providers: [],
+  providers: [Title],
   bootstrap: [AppComponent],
 })
 export class AppModule {}

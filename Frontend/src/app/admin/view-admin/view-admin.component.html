@@ -1,0 +1,81 @@
+<div class="container">
+  <div style="width: 85vw" class="d-flex justify-content-end">
+    <button
+      *ngIf="!singleAdmin"
+      (click)="addAdminCard = !addAdminCard"
+      [ngClass]="addAdminCard ? 'btn-outline-danger' : 'btn-outline-primary'"
+      class="btn"
+    >
+      {{ addAdminCard ? "x" : "+" }}
+    </button>
+  </div>
+  <!-- add admin  -->
+  <div *ngIf="addAdminCard" class="d-flex justify-content-center text-center">
+    <form #adminForm="ngForm" (ngSubmit)="addAdmin(adminForm.value)">
+      <div class="card m-5" style="width: 500px">
+        <h5 class="card-title m-2">Add Admin</h5>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-sm-3">
+              <p class="mb-0">Email</p>
+            </div>
+            <div class="col-sm-9">
+              <input
+                required
+                ngModel
+                id="email"
+                name="email"
+                class="form-control text-muted mb-0"
+                type="email"
+              />
+            </div>
+          </div>
+          <hr />
+          <div class="row">
+            <div class="col-sm-3">
+              <p class="mb-0">Password</p>
+            </div>
+            <div class="col-sm-9">
+              <input
+                required
+                ngModel
+                id="password"
+                name="password"
+                class="form-control text-muted mb-0"
+                type="password"
+              />
+            </div>
+          </div>
+        </div>
+        <div class="btn-group">
+          <button class="btn btn-outline-success">Add Admin</button>
+        </div>
+      </div>
+    </form>
+  </div>
+  <!-- no admins -->
+  <p *ngIf="admins.length == 0" class="m-5">No admins in the data base</p>
+  <!-- show admins -->
+  <div *ngIf="!singleAdmin && !addAdminCard" class="d-flex flex-wrap">
+    <div *ngFor="let admins of admins" class="card m-5" style="width: 300px">
+      <div class="card-body">
+        <img
+          src="../../assets/admin/person_icon.jpg"
+          alt="admin"
+          class="rounded-circle img-fluid"
+        />
+
+        <h5 class="my-3">{{ admins.email }}</h5>
+
+        <a
+          (click)="singleAdmin = true"
+          [routerLink]="admins.email"
+          class="btn btn-outline-primary"
+        >
+          View
+        </a>
+      </div>
+    </div>
+  </div>
+  <router-outlet></router-outlet>
+</div>

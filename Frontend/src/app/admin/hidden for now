@@ -1,0 +1,780 @@
+<!-- hidden for now -->
+
+<!--
+
+
+<div class="container d-flex justify-content-center text-center">
+  <div class="row">
+    <div class="d-flex flex-wrap m-2">
+
+
+
+      <!-- messages -->
+      <div *ngIf="selectMessagesView" class="card m-5" style="width: 300px">
+        <div class="card-body card shadow">
+          <h5 class="card-title">Messages</h5>
+          <img
+            src="../../assets/admin/messages.png"
+            alt="employee"
+            class="rounded-circle img-fluid"
+          />
+          <p class="card-text">Rain Admin details</p>
+
+          <div class="btn-group">
+            <a (click)="onShowMessages()" class="btn btn-outline-primary">
+              {{ messagesView ? "Close" : "View" }}
+            </a>
+            <a *ngIf="messagesView" class="btn btn-outline-success"
+              >New Message</a
+            >
+          </div>
+        </div>
+      </div>
+
+      <!-- tasks -->
+      <div *ngIf="" class="card m-5" style="width: 300px">
+        <div class="card-body card shadow">
+          <h5 class="card-title">Tasks</h5>
+          <img
+            src="../../assets/admin/tasks.png"
+            alt="employee"
+            class="rounded-circle img-fluid"
+          />
+          <p class="card-text">Rain Admin details</p>
+
+          <div class="btn-group">
+            <a class="btn btn-outline-primary">View</a>
+            <a class="btn btn-outline-success">Add</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--  ********************************************************************  -->
+<!--   *************************** ADMINS ***************************  -->
+<!--  ********************************************************************  -->
+
+<div
+  *ngIf="adminsView"
+  class="container d-flex justify-content-center text-center"
+>
+  <!-- show all admins -->
+  <div *ngIf="showAdmin" class="d-flex flex-wrap m-2">
+    <!-- no admins -->
+    <p *ngIf="admins.length == 0" class="m-5">No admins in the data base</p>
+
+    <div *ngFor="let admins of admins" class="card m-5" style="width: 300px">
+      <div class="card-body">
+        <img
+          src="../../assets/admin/person_icon.jpg"
+          alt="admin"
+          class="rounded-circle img-fluid"
+        />
+
+        <h5 class="my-3">{{ admins.email }}</h5>
+
+        <a (click)="onShowAdmin(admins.email)" class="btn btn-outline-primary">
+          View
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- display single admin -->
+  <div *ngIf="showSingleAdmin">
+    <div *ngFor="let admin of admin">
+      <div class="container py-5">
+        <div class="row">
+          <div class="col-lg-4">
+            <div class="card mb-4">
+              <div class="card-body">
+                <img
+                  src="../../assets/admin/person_icon.jpg"
+                  alt="avatar"
+                  class="rounded-circle img-fluid"
+                />
+
+                <h5 class="my-3">{{ admin.email }}</h5>
+
+                <div
+                  *ngIf="editOptions"
+                  class="d-flex justify-content-center mb-2"
+                >
+                  <button
+                    (click)="onShowEditAdmin()"
+                    type="button"
+                    class="btn btn-outline-primary"
+                  >
+                    Change Password
+                  </button>
+                  <button
+                    (click)="onDelete(admin.email)"
+                    type="button"
+                    class="btn btn-outline-danger ms-1"
+                  >
+                    Delete
+                  </button>
+                  <button
+                    (click)="onCancel()"
+                    type="button"
+                    class="btn btn-danger ms-1"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-8">
+            <div class="card mb-4">
+              <div *ngIf="showAdminDetails" class="card-body">
+                <div class="row">
+                  <div class="col-sm-3">
+                    <p class="mb-0">Email</p>
+                  </div>
+                  <div class="col-sm-9">
+                    <p class="text-muted mb-0">
+                      {{ admin.email }}
+                    </p>
+                  </div>
+                </div>
+                <hr />
+                <div class="row">
+                  <div class="col-sm-3">
+                    <p class="mb-0">Password</p>
+                  </div>
+                  <div class="col-sm-9">
+                    <p class="text-muted mb-0">
+                      {{ admin.password }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- edit admin -->
+              <div *ngIf="showEditAdmin" class="card-body">
+                <form
+                  #adminFormEdit="ngForm"
+                  (ngSubmit)="onEditAdmin(admin.email)"
+                >
+                  <div class="row">
+                    <div class="col-sm-3">
+                      <p class="mb-0">Password</p>
+                    </div>
+                    <div class="col-sm-9">
+                      <input
+                        [(ngModel)]="admin.password"
+                        (input)="updateAdmin($event)"
+                        ngModel
+                        id="password"
+                        name="password"
+                        class="form-control text-muted mb-0"
+                        type="text"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <hr style="color: transparent" />
+
+                  <div class="row">
+                    <div class="btn-group">
+                      <button class="btn btn-outline-success">Save</button>
+                      <button
+                        (click)="onCancelEdit()"
+                        type="button"
+                        class="btn btn-outline-danger ms-1"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ********************************************************************  -->
+<!-- *************************** EMPLOYEES ***************************  -->
+<!-- ********************************************************************  -->
+
+<div
+  *ngIf="employeesView"
+  class="container d-flex justify-content-center text-center"
+>
+  <!-- display employees -->
+  <div *ngIf="showEmployees" class="d-flex flex-wrap m-2">
+    <!-- no employees -->
+    <p *ngIf="employees.length == 0" class="m-5">Database has no employees</p>
+
+    <div
+      *ngFor="let employee of employees"
+      class="card m-5"
+      style="width: 300px"
+    >
+      <div class="card-body">
+        <img
+          src="../../assets/admin/person_icon.jpg"
+          alt="employee"
+          class="rounded-circle img-fluid"
+        />
+
+        <h5 class="my-3">{{ employee.name }} {{ employee.surname }}</h5>
+
+        <p class="text-muted mb-1">{{ employee.position }}</p>
+        <p class="text-muted mb-4">{{ employee.email }}</p>
+        <a
+          (click)="onShowEmployee(employee.email)"
+          class="btn btn-outline-primary"
+          >View</a
+        >
+      </div>
+    </div>
+  </div>
+
+  <!-- display single employee -->
+  <div *ngIf="showEmployee">
+    <div *ngFor="let employee of employee">
+      <div class="container py-5">
+        <div class="row">
+          <div class="col-lg-4">
+            <div class="card mb-4">
+              <div class="card-body">
+                <img
+                  src="../../assets/admin/person_icon.jpg"
+                  alt="avatar"
+                  class="rounded-circle img-fluid"
+                />
+
+                <h5 class="my-3">{{ employee.name }} {{ employee.surname }}</h5>
+
+                <p class="text-muted mb-1">{{ employee.position }}</p>
+                <p class="text-muted mb-4">{{ employee.email }}</p>
+                <div
+                  *ngIf="EditEmployeeButtons"
+                  class="d-flex justify-content-center mb-2"
+                >
+                  <button
+                    (click)="showEditOptions()"
+                    type="button"
+                    class="btn btn-outline-primary"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    (click)="onDeleteEmployee(employee.email)"
+                    type="button"
+                    class="btn btn-outline-danger ms-1"
+                  >
+                    Delete
+                  </button>
+                  <button
+                    (click)="onCancelViewEmployee()"
+                    type="button"
+                    class="btn btn-danger ms-1"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-8">
+            <div class="card mb-4">
+              <div *ngIf="showEmployeeDetails" class="card-body">
+                <div class="row">
+                  <div class="col-sm-3">
+                    <p class="mb-0">Full Name</p>
+                  </div>
+                  <div class="col-sm-9">
+                    <p class="text-muted mb-0">
+                      {{ employee.name }} {{ employee.surname }}
+                    </p>
+                  </div>
+                </div>
+                <hr />
+                <div class="row">
+                  <div class="col-sm-3">
+                    <p class="mb-0">Cell</p>
+                  </div>
+                  <div class="col-sm-9">
+                    <p class="text-muted mb-0">
+                      {{ employee.cell }}
+                    </p>
+                  </div>
+                </div>
+                <hr />
+                <div class="row">
+                  <div class="col-sm-3">
+                    <p class="mb-0">Position</p>
+                  </div>
+                  <div class="col-sm-9">
+                    <p class="text-muted mb-0">
+                      {{ employee.position }}
+                    </p>
+                  </div>
+                </div>
+                <hr />
+                <div class="row">
+                  <div class="col-sm-3">
+                    <p class="mb-0">Email</p>
+                  </div>
+                  <div class="col-sm-9">
+                    <p class="text-muted mb-0">
+                      {{ employee.email }}
+                    </p>
+                  </div>
+                </div>
+                <hr />
+                <div class="row">
+                  <div class="col-sm-3">
+                    <p class="mb-0">Password</p>
+                  </div>
+                  <div class="col-sm-9">
+                    <p class="text-muted mb-0">
+                      {{ employee.password }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- edit employee -->
+              <div *ngIf="showEditEmployee" class="card-body">
+                <form
+                  #employeeEditForm="ngForm"
+                  (ngSubmit)="onEditEmployee(employee.email)"
+                >
+                  <div class="row">
+                    <div class="col-sm-3">
+                      <p class="mb-0">Name</p>
+                    </div>
+                    <div class="col-sm-9">
+                      <input
+                        [(ngModel)]="employee.name"
+                        (input)="updateEmployeeName($event)"
+                        ngModel
+                        id="name"
+                        name="name"
+                        class="form-control text-muted mb-0"
+                        type="text"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <hr />
+                  <div class="row">
+                    <div class="col-sm-3">
+                      <p class="mb-0">Surname</p>
+                    </div>
+                    <div class="col-sm-9">
+                      <input
+                        [(ngModel)]="employee.surname"
+                        (input)="updateEmployeeSurname($event)"
+                        ngModel
+                        id="surname"
+                        name="surname"
+                        class="form-control text-muted mb-0"
+                        type="text"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <hr />
+                  <div class="row">
+                    <div class="col-sm-3">
+                      <p class="mb-0">Cell</p>
+                    </div>
+                    <div class="col-sm-9">
+                      <input
+                        [(ngModel)]="employee.cell"
+                        (input)="updateEmployeeCell($event)"
+                        ngModel
+                        id="cell"
+                        name="cell"
+                        class="form-control text-muted mb-0"
+                        type="text"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <hr />
+                  <div class="row">
+                    <div class="col-sm-3">
+                      <p class="mb-0">Position</p>
+                    </div>
+                    <div class="col-sm-9">
+                      <input
+                        [(ngModel)]="employee.position"
+                        (input)="updateEmployeePosition($event)"
+                        ngModel
+                        id="employeePosition"
+                        name="position"
+                        class="form-control text-muted mb-0"
+                        type="text"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <hr />
+                  <div class="row">
+                    <div class="col-sm-3">
+                      <p class="mb-0">Password</p>
+                    </div>
+                    <div class="col-sm-9">
+                      <input
+                        [(ngModel)]="employee.password"
+                        (input)="updateEmployeePassword($event)"
+                        ngModel
+                        id="employeePassword"
+                        name="password"
+                        class="form-control text-muted mb-0"
+                        type="text"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <hr />
+                  <!--
+
+
+                    <div class="row">
+                    <div class="col-sm-3">
+                      <p class="mb-0">Profile Picture</p>
+                    </div>
+                    <div class="col-sm-9">
+                      <input type="file" class="form-control text-muted mb-0" />
+                    </div>
+                  </div>
+                  <hr />
+
+                   -->
+                  <div class="row">
+                    <div class="btn-group">
+                      <button class="btn btn-outline-success">Save</button>
+                      <button
+                        (click)="onCancelEditEmployee()"
+                        type="button"
+                        class="btn btn-outline-danger ms-1"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+-->
+
+<!-- ************************************************************************************ -->
+<!-- ************************************************************************************ -->
+<!-- ************************************************************************************ -->
+<!-- ************************************************************************************ -->
+
+<!-- ************************************************************************************ -->
+<!-- ************************************************************************************ -->
+<!-- ************************************************************************************ -->
+
+<div _ngcontent-sad-c140="" class="row cards">
+  <div
+    _ngcontent-sad-c140=""
+    class="col-lg-4 col-md-6 min-height mb-8 border-0 service-card"
+  >
+    <div
+      _ngcontent-sad-c140=""
+      class="shadow card h-100 border-0 custom-rounded"
+    >
+      <div
+        _ngcontent-sad-c140=""
+        class="card-body h-100 pb-0 min-bod text-center"
+      >
+        <h2 _ngcontent-sad-c140="" class="text-primary pb-15 heading">
+          my account
+        </h2>
+        <div
+          _ngcontent-sad-c140=""
+          class="d-flex justify-content-center mx-auto flex-column mt-5"
+        >
+          <img
+            _ngcontent-sad-c140=""
+            src="../../assets/images/profile-icon_215px.png"
+            alt="image"
+            class="cust-active img-fluid d-block mx-auto"
+          />
+        </div>
+      </div>
+      <div
+        _ngcontent-sad-c140=""
+        class="card-footer d-flex bg-transparent border-0"
+      >
+        <button
+          _ngcontent-sad-c140=""
+          data-id="btn-click"
+          data-text="manage account | navigate to my account page from my rain page"
+          class="btn btn-md btn-outline-blue text-primary p-0 mb-4 font-weight-normal py-0 ml-auto mr-2"
+          tabindex="0"
+        >
+          manage
+        </button>
+      </div>
+    </div>
+  </div>
+  <!---->
+  <div
+    _ngcontent-sad-c140=""
+    class="col-lg-4 col-md-6 min-height other mb-8 border-0 service-card product-card"
+  >
+    <div
+      _ngcontent-sad-c140=""
+      class="shadow card border-0 h-100 custom-rounded"
+    >
+      <div _ngcontent-sad-c140="" class="card-body h-100 pb-0">
+        <div
+          _ngcontent-sad-c140=""
+          class="w-100 py-10 d-flex flex-column flex-sm-row justify-content-between"
+        >
+          <div _ngcontent-sad-c140="" class="left w-left mr-8">
+            <app-device-image _ngcontent-sad-c140="" _nghost-sad-c139=""
+              ><!----><img
+                _ngcontent-sad-c139=""
+                alt="..."
+                class="img-fluid mb-10 mb-sm-0 min-width-products mx-auto"
+                src="assets/images/defaultphone.svg"
+              /><!----></app-device-image
+            >
+          </div>
+          <div _ngcontent-sad-c140="" class="right w-right">
+            <div _ngcontent-sad-c140="" class="card-body p-0">
+              <h3 _ngcontent-sad-c140="" class="text-primary mb-10">
+                SIM 1
+                <span _ngcontent-sad-c140=""
+                  ><i
+                    _ngcontent-sad-c140=""
+                    class="fas fa-check-circle success"
+                  ></i></span
+                ><!---->
+              </h3>
+              <!---->
+              <p _ngcontent-sad-c140="" class="m-0">SIM plan:</p>
+              <!---->
+              <p
+                _ngcontent-sad-c140=""
+                class="text-medium small-font-size text-primary plan-name"
+              >
+                4G prepaid gigs
+              </p>
+              <!---->
+              <div _ngcontent-sad-c140="" class="mt-5 prepaid-dataplan">
+                <p _ngcontent-sad-c140="">Gigs remaining:</p>
+                <span _ngcontent-sad-c140="" class="remaining-gig">
+                  0.01 GB
+                </span>
+              </div>
+              <!----><!---->
+            </div>
+          </div>
+        </div>
+        <!---->
+      </div>
+      <!---->
+      <div
+        _ngcontent-sad-c140=""
+        class="card-footer bg-transparent d-flex border-0"
+      >
+        <button
+          _ngcontent-sad-c140=""
+          data-id="btn-click"
+          data-text="manage service | view and manage service from my rain page"
+          data-toggle="modal"
+          class="btn-outline-blue btn btn-md text-primary p-0 mb-4 font-weight-normal py-0 ml-auto mr-2"
+          data-target="#manageSim"
+        >
+          manage
+        </button>
+      </div>
+    </div>
+  </div>
+  <!----><!---->
+  <div
+    _ngcontent-sad-c140=""
+    class="col-lg-4 col-md-6 min-height col-md mb-8 card border-0 service-card"
+  >
+    <div
+      _ngcontent-sad-c140=""
+      class="shadow card border-0 h-100 custom-rounded"
+    >
+      <div
+        _ngcontent-sad-c140=""
+        class="card-body h-100 pb-0 min-bod text-center"
+      >
+        <h2 _ngcontent-sad-c140="" class="text-primary pb-15 heading">
+          my notifications
+        </h2>
+        <div
+          _ngcontent-sad-c140=""
+          class="d-flex justify-content-center mx-auto flex-column mt-5 pl-10"
+        >
+          <!----><!----><!----><!----><!----><img
+            _ngcontent-sad-c140=""
+            src="../../assets/images/inbox/no_5_up.png"
+            width="240"
+            alt="image"
+            class="last-img img-fluid d-block mx-auto"
+          /><!---->
+        </div>
+      </div>
+      <div
+        _ngcontent-sad-c140=""
+        class="card-footer bg-transparent d-flex border-0"
+      >
+        <button
+          _ngcontent-sad-c140=""
+          data-id="btn-click"
+          data-text="shop | navigate to home page from my rain page"
+          class="btn btn-md btn-outline-blue text-primary mb-4 p-0 font-weight-normal py-0 ml-auto mr-2"
+        >
+          manage
+        </button>
+      </div>
+    </div>
+  </div>
+  <!---->
+  <div
+    _ngcontent-sad-c140=""
+    class="col-lg-4 col-md-6 min-height mb-8 border-0 service-card download-card"
+  >
+    <div
+      _ngcontent-sad-c140=""
+      class="shadow card h-100 border-0 custom-rounded"
+    >
+      <div
+        _ngcontent-sad-c140=""
+        class="card-body h-100 pb-0 min-bod text-center"
+      >
+        <h2 _ngcontent-sad-c140="" class="text-primary heading pb-15">
+          download the my rain app now
+        </h2>
+        <div
+          _ngcontent-sad-c140=""
+          class="d-flex justify-content-center mx-auto flex-column mt-5"
+        >
+          <img
+            _ngcontent-sad-c140=""
+            width="250px"
+            src="../../assets/images/my-rain/download-app.png"
+            alt="image"
+            class="download-app-img img-fluid d-block mx-auto"
+          />
+        </div>
+      </div>
+      <div _ngcontent-sad-c140="" class="justify-content-center d-flex p-4">
+        <span _ngcontent-sad-c140="" class="check-usage-text">
+          Manage your account, track billing &amp; switch data plans.
+        </span>
+      </div>
+      <div
+        _ngcontent-sad-c140=""
+        class="card-footer bg-transparent justify-content-center d-flex border-0 text-center"
+      >
+        <div _ngcontent-sad-c140="" class="d-flex">
+          <img
+            _ngcontent-sad-c140=""
+            data-id=" exit-click"
+            data-text="google store | https://play.google.com/store/apps/details?id=consumer.app.co.za.rain&amp;gl=ZA"
+            src="/assets/images/download-app/google-play-img.png"
+            alt=""
+            class="gallery-img pr-2"
+          /><img
+            _ngcontent-sad-c140=""
+            data-id="exit-click"
+            data-text="google store | https://play.google.com/store/apps/details?id=consumer.app.co.za.rain&amp;gl=ZA"
+            src="/assets/images/download-app/huawei.png"
+            alt=""
+            class="gallery-img"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--  -->
+
+<!-- ************************************************************************************ -->
+<!-- ************************************************************************************ -->
+<!-- ************************************************************************************ -->
+<!-- ************************************************************************************ -->
+
+<!-- ************************************************************************************ -->
+<!-- ************************************************************************************ -->
+<!-- ************************************************************************************ -->
+
+<div class="row cards">
+  <div
+    *ngIf="!seeEmployees && !seeMessages && !seeTasks"
+    class="col-lg-4 col-md-6 min-height mb-8 border-0 service-card"
+  >
+    <div class="shadow card h-100 border-0 custom-rounded">
+      <div class="card-body h-100 pb-0 min-bod text-center">
+        <div class="d-flex justify-content-center mx-auto flex-column mt-5">
+          <img class="cust-active img-fluid d-block mx-auto" />
+          <button class="ml-auto"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div
+    *ngIf="!seeAdmins && !seeMessages && !seeTasks"
+    class="col-lg-4 col-md-6 min-height mb-8 border-0 service-card"
+  >
+    <div class="shadow card h-100 border-0 custom-rounded">
+      <div class="card-body h-100 pb-0 min-bod text-center">
+        <div class="d-flex justify-content-center mx-auto flex-column mt-5">
+          <img class="cust-active img-fluid d-block mx-auto" />
+          <button class="ml-auto"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div
+    *ngIf="!seeAdmins && !seeEmployees && !seeTasks"
+    class="col-lg-4 col-md-6 min-height mb-8 border-0 service-card"
+  >
+    <div class="shadow card h-100 border-0 custom-rounded">
+      <div class="card-body h-100 pb-0 min-bod text-center">
+        <div class="d-flex justify-content-center mx-auto flex-column mt-5">
+          <img class="cust-active img-fluid d-block mx-auto" />
+          <button class="ml-auto"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div
+    *ngIf="!seeAdmins && !seeEmployees && !seeMessages"
+    class="col-lg-4 col-md-6 min-height mb-8 border-0 service-card"
+  >
+    <div class="shadow card h-100 border-0 custom-rounded">
+      <div class="card-body h-100 pb-0 min-bod text-center">
+        <div class="d-flex justify-content-center mx-auto flex-column mt-5">
+          <img class="cust-active img-fluid d-block mx-auto" />
+          <button class="ml-auto"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

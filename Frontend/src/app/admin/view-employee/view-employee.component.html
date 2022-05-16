@@ -1,0 +1,160 @@
+<div class="container">
+  <!-- add empolyeees button -->
+  <div style="width: 85vw" class="d-flex justify-content-end">
+    <button
+      *ngIf="!employee"
+      (click)="addEmployeeCard = !addEmployeeCard"
+      [ngClass]="addEmployeeCard ? 'btn-outline-danger' : 'btn-outline-primary'"
+      class="btn"
+    >
+      {{ addEmployeeCard ? "x" : "+" }}
+    </button>
+  </div>
+
+  <!-- add employees -->
+  <div
+    *ngIf="addEmployeeCard"
+    class="d-flex justify-content-center text-center"
+  >
+    <form #employeeForm="ngForm" (ngSubmit)="addEmployee(employeeForm.value)">
+      <div class="card m-5" style="width: 500px">
+        <h5 class="card-title m-2">Add Employee</h5>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-sm-3">
+              <p class="mb-0">Name</p>
+            </div>
+            <div class="col-sm-9">
+              <input
+                ngModel
+                id="name"
+                name="name"
+                class="form-control text-muted mb-0"
+                type="text"
+                required
+              />
+            </div>
+          </div>
+          <hr />
+          <div class="row">
+            <div class="col-sm-3">
+              <p class="mb-0">Surname</p>
+            </div>
+            <div class="col-sm-9">
+              <input
+                ngModel
+                id="surname"
+                name="surname"
+                class="form-control text-muted mb-0"
+                type="text"
+                required
+              />
+            </div>
+          </div>
+          <hr />
+          <div class="row">
+            <div class="col-sm-3">
+              <p class="mb-0">Cell</p>
+            </div>
+            <div class="col-sm-9">
+              <input
+                ngModel
+                id="cell"
+                name="cell"
+                class="form-control text-muted mb-0"
+                type="text"
+                required
+              />
+            </div>
+          </div>
+          <hr />
+          <div class="row">
+            <div class="col-sm-3">
+              <p class="mb-0">Position</p>
+            </div>
+            <div class="col-sm-9">
+              <input
+                ngModel
+                id="position"
+                name="position"
+                class="form-control text-muted mb-0"
+                type="text"
+                required
+              />
+            </div>
+          </div>
+          <hr />
+          <div class="row">
+            <div class="col-sm-3">
+              <p class="mb-0">Email</p>
+            </div>
+            <div class="col-sm-9">
+              <input
+                ngModel
+                id="email"
+                name="email"
+                class="form-control text-muted mb-0"
+                type="email"
+                required
+              />
+            </div>
+          </div>
+          <hr />
+          <div class="row">
+            <div class="col-sm-3">
+              <p class="mb-0">Profile Picture</p>
+            </div>
+            <div class="col-sm-9">
+              <input
+                ngModel
+                id="profilePic"
+                name="profilePic"
+                class="form-control text-muted mb-0"
+                type="file"
+                required
+              />
+            </div>
+          </div>
+        </div>
+        <div class="btn-group m-2">
+          <button class="btn btn-success">Add Employee</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- no employees -->
+  <p *ngIf="employees.length == 0" class="m-5">No employees in the data base</p>
+
+  <!-- show employees -->
+
+  <div *ngIf="!employee && !addEmployeeCard" class="d-flex flex-wrap">
+    <div
+      *ngFor="let employees of employees"
+      class="card m-5"
+      style="width: 300px"
+    >
+      <div class="card-body">
+        <img
+          src="../../assets/admin/person_icon.jpg"
+          alt="employee"
+          class="rounded-circle img-fluid"
+        />
+
+        <h5 class="my-3">{{ employees.name }} {{ employees.surname }}</h5>
+
+        <p class="text-muted mb-1">{{ employees.position }}</p>
+        <p class="text-muted mb-4">{{ employees.email }}</p>
+
+        <a
+          (click)="employee = true"
+          [routerLink]="employees.email"
+          class="btn btn-outline-primary"
+        >
+          View
+        </a>
+      </div>
+    </div>
+  </div>
+  <router-outlet></router-outlet>
+</div>

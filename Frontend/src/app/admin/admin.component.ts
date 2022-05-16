@@ -1,25 +1,64 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { map } from 'rxjs';
 import { Admin, Employee } from './admin.model';
 
+import { Title } from '@angular/platform-browser';
+
+import { ViewAdminComponent } from './view-admin/view-admin.component';
 @Component({
   selector: 'app-admin',
   templateUrl: './admin.component.html',
   styleUrls: ['./admin.component.css'],
 })
-export class AdminComponent implements OnInit {
-  constructor(private http: HttpClient) {}
+export class AdminComponent implements OnInit, OnChanges {
+  constructor(private http: HttpClient, private titleService: Title) {}
 
+  title: any;
   ngOnInit(): void {
     this.fetchAllAdmin();
     this.fetchEmployees();
+    this.title = this.titleService.getTitle();
+    console.log('Title of page:', this.title);
   }
+  ngOnChanges(changes: SimpleChanges): void {}
+
+  optionSelected = false;
+
+  // show admin options on nav
+  showAdminOptions = false;
+
+  loggedIn = true;
+
+  // h5 tag
+  componentTitle = '';
+
+  // import component title
+  // title = new ViewAdminComponent(this.http);
+  // adminTitle = this.title.title;
+
+  // Admins
+  seeAdmins = false;
+
+  // Employees
+  seeEmployees = false;
+
+  // Messages
+  seeMessages = false;
+
+  // Tasks
+  seeTasks = false;
+
+  // old code
 
   // ******************************************************************** //
   //  *************************** ADMINS *************************** //
   // ******************************************************************** //
   adminsView = false;
+
+  onChangeView() {
+    this.adminsView = true;
+  }
 
   // all admins
 
@@ -59,23 +98,19 @@ export class AdminComponent implements OnInit {
     alert(`${adminData.email} added successfully`);
   }
 
-  onCancelAddAdmin() {
-    this.showAddAdmin = false;
-    this.showAdmin = true;
-  }
-
   // view all admin users from postgres db
   onShowAdmins() {
     this.fetchAllAdmin();
-    this.adminsView = true;
-    this.employeesView = false;
+    this.adminsView = !this.adminsView;
+    this.selectEmployeesView = !this.selectEmployeesView;
+    this.selectMessagesView = !this.selectMessagesView;
 
+    // ********************
     this.showAdmin = !this.showAdmin;
     this.showAddAdmin = false;
-    this.showSingleAdmin = false;
+    // this.employeesView = false;
 
-    this.showEmployees = false;
-    this.showEmployee = false;
+    this.showSingleAdmin = false;
   }
   onFetchAllAdmin() {
     this.fetchAllAdmin();
@@ -206,6 +241,7 @@ export class AdminComponent implements OnInit {
   // ******************************************************************** //
 
   employeesView = false;
+  selectEmployeesView = true;
 
   // all employees
 
@@ -217,18 +253,6 @@ export class AdminComponent implements OnInit {
 
   // add employees to db
   showAddEmployee = false;
-
-  onShowAddEmployees() {
-    this.employeesView = true;
-    this.adminsView = false;
-
-    this.showAddEmployee = !this.showAddEmployee;
-    this.showEmployees = false;
-    this.showEmployee = false;
-
-    this.showAdmin = false;
-    this.showAddAdmin = false;
-  }
 
   onAddEmployee(employeeData: Employee) {
     this.http
@@ -242,25 +266,7 @@ export class AdminComponent implements OnInit {
     alert(`${employeeData.email} added successfully`);
   }
 
-  onCancelAddEmployee() {
-    this.showAddEmployee = false;
-    this.showEmployees = true;
-  }
-
   // show all employees from db
-  onShowEmployees() {
-    this.fetchEmployees();
-    this.employeesView = true;
-    this.adminsView = false;
-
-    this.employeesView = true;
-    this.showAddAdmin = false;
-    this.showAdmin = false;
-    this.showSingleAdmin = false;
-    this.showEmployees = !this.showEmployees;
-    this.showEmployee = false;
-    this.showAddEmployee = false;
-  }
 
   fetchEmployees() {
     this.http
@@ -278,6 +284,7 @@ export class AdminComponent implements OnInit {
       )
       .subscribe((employee) => {
         this.employees = employee;
+        console.log('>>>admin comp', this.employees);
       });
   }
 
@@ -286,11 +293,7 @@ export class AdminComponent implements OnInit {
 
   employee: Employee[] = [];
 
-  onShowEmployee(employee: string) {
-    this.showEmployees = false;
-    this.showEmployee = true;
-    this.fetchEmployee(employee);
-  }
+  onShowEmployee(employee: string) {}
 
   fetchEmployee(employee: string) {
     this.http
@@ -416,4 +419,20 @@ export class AdminComponent implements OnInit {
     }
     this.showEmployee = false;
   }
+
+  // ******************************************************************** //
+  //  *************************** Messages *************************** //
+  // ******************************************************************** //
+
+  selectMessagesView = true;
+  messagesView = false;
+
+  onShowMessages() {
+    this.messagesView = !this.messagesView;
+
+    this.selectEmployeesView = !this.selectEmployeesView;
+    // this.selectAdminsView = !this.selectAdminsView;
+  }
+
+  onShowAddNewMessage() {}
 }

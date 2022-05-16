@@ -1,15 +1,28 @@
 // import modules
-const { Router, query } = require("express");
-const fileUpload = require("express-fileupload");
+const { Router } = require("express");
+const router = Router();
 
 const pool = require("../db");
-const router = Router();
+
+const nodemailer = require("nodemailer");
+
+// **************
 const util = require("util");
 
 const path = require("path");
 const { json } = require("body-parser");
 
-router.use(fileUpload());
+// **************
+
+// email settings
+let transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: "62545a@gmail.com",
+    pass: "pvkjnaptzgklizin",
+  },
+});
+
 // routes and methods
 router.all("/", (request, response, next) => {
   response.header("Access-Control-Allow-Origin", "*");
@@ -96,21 +109,26 @@ router
     });
   })
   // add employee
-  .post((request, response, next) => {
-    // console.log("test", request.files.data);
-    const { name, surname, cell, position, email, password } = request.body;
-    // const { data } = request.files.image;
+  .post(async (request, response, next) => {
+    const { name, surname, cell, position, email } = request.body;
+    let password = "makeitrain";
 
     pool.query(
       "INSERT INTO employees(name, surname, cell, position, email, password) VALUES($1, $2, $3, $4, $5, $6)",
       [name, surname, cell, position, email, password],
       (err, res) => {
         if (err) return next(err);
-
-        // response.send("Employee Added");
-        // response.json(email + " Added");
       }
     );
+
+    let welcomeEmail = {
+      from: "62545a@gmail.com",
+      to: `${email}`,
+      subject: `Hello and Welcome to RainSA  ${name}`,
+      text: `You have been added to the Rain Employees Database, Login to your account with your email: ${email} and password: ${password}. Please change your password. Link: https://raindbpsql.netlify.app/`,
+    };
+
+    const info = await transporter.sendMail(welcomeEmail);
   })
   // delete employees table
   .delete((request, response, next) => {
@@ -138,14 +156,20 @@ router
     );
   })
   // edit employee
-  .put((request, response) => {
+  .put(async (request, response) => {
     const { email } = request.params;
 
+    // const keys = [
+    //   { name: "name" },
+    //   { surname: "surname" },
+    //   { cell: "cell" },
+    //   { position: "position" },
+    //   { password: "password" },
+    // ];
     const keys = ["name", "surname", "cell", "position", "password"];
-
     const details = [];
 
-    keys.forEach((key) => {
+    keys.forEach(async (key) => {
       if (request.body[key]) details.push(key);
 
       details.forEach((detail) => {
@@ -154,17 +178,22 @@ router
           [request.body[detail], email],
           (err, res) => {
             if (err) return next(err);
-
-            // response.send("employee details updated");
-            // response.json(res);
-            // response.send("sent");
           }
         );
       });
     });
+
+    let updatedEmployee = {
+      from: "62545a@gmail.com",
+      to: `${email}`,
+      subject: `${email} updated successfully`,
+      text: `Your updated credentials... `,
+    };
+
+    const info = await transporter.sendMail(updatedEmployee);
   })
   // delete employee
-  .delete((request, response, next) => {
+  .delete(async (request, response, next) => {
     const { email } = request.params;
 
     pool.query(
@@ -172,26 +201,33 @@ router
       [email],
       (err, res) => {
         if (err) return next(err);
-
-        // response.send("Employee deleted");
         response.json();
       }
     );
+
+    let deletedEmployee = {
+      from: "62545a@gmail.com",
+      to: `${email}`,
+      subject: `Goodbye from RainSA  ${email}`,
+      text: `You have been removed from the Rain Employees Database`,
+    };
+
+    const info = await transporter.sendMail(deletedEmployee);
   });
 
-router.route("/login").post((request, response, next) => {
+router.route("/login").get((request, response, next) => {
   const { email } = request.body;
 
   let emailArray = [];
-  // let emailArray = [email];
 
   pool.query("SELECT * FROM admin WHERE email=($1)", [email], (err, res) => {
     if (err) return next(err);
 
-    emailArray.push();
-    // let contains = emailArray.Contains(email);
+    if (email === "email") {
+      console.log(true);
+    }
 
-    // console.log(emailArray.indexOf(email));
+    emailArray.push();
 
     if (emailArray.length > 0) {
       console.log(emailArray.indexOf(email));
@@ -204,104 +240,7 @@ router.route("/login").post((request, response, next) => {
       console.log(res.rows, email, "false");
       response.send("No exists");
     }
-
-    // response.json(res.rows);
   });
 });
-
-// *******************************
 
 module.exports = router;
-
-/*
-
-
-
-// http://localhost:3000/auth
-app.post("/auth", function (request, response) {
-  // Capture the input fields
-  let username = request.body.username;
-  let password = request.body.password;
-  // Ensure the input fields exists and are not empty
-  if (username && password) {
-    // Execute SQL query that'll select the account from the database based on the specified username and password
-    connection.query(
-      "SELECT * FROM accounts WHERE username = ? AND password = ?",
-      [username, password],
-      function (error, results, fields) {
-        // If there is an issue with the query, output the error
-        if (error) throw error;
-        // If the account exists
-        if (results.length > 0) {
-          // Authenticate the user
-          request.session.loggedin = true;
-          request.session.username = username;
-          // Redirect to home page
-          response.redirect("/home");
-        } else {
-          response.send("Incorrect Username and/or Password!");
-        }
-        response.end();
-      }
-    );
-  } else {
-    response.send("Please enter Username and Password!");
-    response.end();
-  }
-});
-
-
-
-**********************************
-
-
-
-
-pool.query("SELECT * FROM admin WHERE email=$1", [email], (err, res) => {
-    if (err) return next(err);
-
-    if (email == "admin@rain.co.za") {
-      response.send(`logged in ${email}`);
-      // response.redirect("https://abdulmalikcodes.netlify.app/home");
-    } else {
-      response.send(`User doesnt exist ${email}`);
-    }
-
-    // console.log(email);
-
-    // response.send(email, "test");
-
-    // response.json(res.rows);
-    // response.redirect("/admin");
-  });
-
-******************************************************
-
-
-
-  // const { email } = request.body;
-
-  let email = request.body.email;
-
-  if (email == "super.admin@rain.co.za") {
-    pool.query("SELECT * FROM admin WHERE email=$1", [email], (err, res) => {
-      if (err) {
-        return next(err);
-      } else {
-        if ((res.length = 0)) {
-          response.send("hey hey");
-        } else {
-          console.log(res.rows);
-          response.send("NO no");
-        }
-
-        response.end();
-      }
-    });
-  } else {
-    response.send("please log");
-    response.end();
-  }
-
-
-*/

@@ -1,0 +1,105 @@
+<div *ngFor="let admin of admin">
+  <div class="container py-5">
+    <div class="row">
+      <div class="col-lg-4">
+        <div class="card mb-4">
+          <div class="card-body">
+            <img
+              src="../../assets/admin/person_icon.jpg"
+              alt="avatar"
+              class="rounded-circle img-fluid"
+            />
+
+            <h5 class="my-3">{{ admin.email }}</h5>
+
+            <div
+              *ngIf="!seeEditAdmin"
+              class="d-flex justify-content-center mb-2"
+            >
+              <button
+                (click)="seeEditAdmin = true"
+                type="button"
+                class="btn btn-outline-primary"
+              >
+                Change Password
+              </button>
+              <button
+                (click)="deleteAdmin(admin.email)"
+                type="button"
+                class="btn btn-outline-danger ms-1"
+              >
+                Delete
+              </button>
+              <button type="button" class="btn btn-danger ms-1">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-8">
+        <div class="card mb-4">
+          <!-- admin details -->
+          <div *ngIf="!seeEditAdmin" class="card-body">
+            <div class="row">
+              <div class="col-sm-3">
+                <p class="mb-0">Email</p>
+              </div>
+              <div class="col-sm-9">
+                <p class="text-muted mb-0">
+                  {{ admin.email }}
+                </p>
+              </div>
+            </div>
+            <hr />
+            <div class="row">
+              <div class="col-sm-3">
+                <p class="mb-0">Password</p>
+              </div>
+              <div class="col-sm-9">
+                <p class="text-muted mb-0">
+                  {{ admin.password }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- edit admin -->
+          <div *ngIf="seeEditAdmin" class="card-body">
+            <form #adminFormEdit="ngForm" (ngSubmit)="updateAdmin(admin.email)">
+              <div class="row">
+                <div class="col-sm-3">
+                  <p class="mb-0">Password</p>
+                </div>
+                <div class="col-sm-9">
+                  <input
+                    [(ngModel)]="admin.password"
+                    (input)="passwordInput($event)"
+                    ngModel
+                    id="password"
+                    name="password"
+                    class="form-control text-muted mb-0"
+                    type="text"
+                    required
+                  />
+                </div>
+              </div>
+              <hr style="color: transparent" />
+
+              <div class="row">
+                <div class="btn-group">
+                  <button class="btn btn-outline-success">Save</button>
+                  <button
+                    (click)="seeEditAdmin = false"
+                    type="button"
+                    class="btn btn-outline-danger ms-1"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

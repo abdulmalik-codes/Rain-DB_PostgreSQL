@@ -1,3 +1,4 @@
+import { HttpClient } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 
 @Component({
@@ -6,13 +7,24 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./login.component.css'],
 })
 export class LoginComponent implements OnInit {
+  constructor(private http: HttpClient) {}
+
+  ngOnInit(): void {
+    this.adminLoggedIn;
+    console.log(this.adminLoggedIn);
+  }
+
+  adminLoggedIn: boolean = false;
+
+  onLoginAdmin(adminLoggedIn: boolean = true) {
+    // console.log('>>>admin is logged in', this.adminLoggedIn);
+    return (this.adminLoggedIn = adminLoggedIn);
+  }
+  // old code
+
   employeeLogin = true;
   registerEmployee = false;
   forgotPassword = false;
-
-  constructor() {}
-
-  ngOnInit(): void {}
 
   // login
   onLoginEmployee() {}
@@ -44,5 +56,19 @@ export class LoginComponent implements OnInit {
   onCancelForgot() {
     this.forgotPassword = false;
     this.employeeLogin = true;
+  }
+
+  // test
+  adminsUrl = 'http://localhost:3000/admin/admin/admin';
+
+  submitProfile(pp: string) {
+    this.http
+      .post(this.adminsUrl, pp, { responseType: 'json' })
+      .subscribe((responseData) => {
+        console.log(responseData);
+      });
+
+    alert(`added successfully`);
+    // ${pp}
   }
 }

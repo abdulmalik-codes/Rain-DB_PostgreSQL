@@ -9,6 +9,6 @@ echo "Configuring database: $database"
 dropdb -U abdulmalik raindb
 createdb -U abdulmalik raindb
 
-psql -U abdulmalik raindb < ./bin/sql/raindb.sql
+psql -U abdulmalik raindb < ./bin/raindb.sql
 
 echo "$database configured"

@@ -1,0 +1,105 @@
+<div class="d-flex justify-content-center text-center">
+  <div class="d-flex flex-wrap">
+    <!-- admin option card -->
+    <div *ngIf="!seeEmployees && !seeMessages && !seeTasks" class="card m-3">
+      <div class="card-body card shadow">
+        <img
+          src="../../assets/admin/view-admin/admin.png"
+          alt="admin"
+          class="rounded-circle img-fluid"
+        />
+
+        <div class="d-flex justify-content-end">
+          <a
+            (click)="seeAdmins = !seeAdmins"
+            [routerLink]="[seeAdmins ? '/admin' : 'view-admins']"
+            [ngClass]="[
+              seeAdmins ? 'btn btn-outline-danger' : 'btn btn-outline-primary'
+            ]"
+            class="rounded-pill"
+          >
+            {{ seeAdmins ? "Close Admins" : "View Admins" }}
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- employee option card -->
+
+    <div *ngIf="!seeAdmins && !seeMessages && !seeTasks" class="card m-3">
+      <div class="card-body card shadow">
+        <img
+          src="../../assets/admin/view-employees/employees.jfif"
+          alt="admin"
+          class="rounded-circle img-fluid"
+        />
+
+        <div class="d-flex justify-content-end">
+          <a
+            (click)="seeEmployees = !seeEmployees"
+            [routerLink]="[seeEmployees ? '/admin' : 'view-employees']"
+            [ngClass]="[
+              seeEmployees
+                ? 'btn btn-outline-danger'
+                : 'btn btn-outline-primary'
+            ]"
+            class="rounded-pill pull-right"
+          >
+            {{ seeEmployees ? "Close Employees" : "View Employees" }}
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- messages option card -->
+    <div *ngIf="!seeAdmins && !seeEmployees && !seeTasks" class="card m-3">
+      <div class="card-body shadow border rounded">
+        <img
+          src="../../assets/admin/messages.png"
+          alt="admin"
+          class="rounded-circle img-fluid"
+        />
+
+        <div class="d-flex justify-content-end">
+          <a
+            (click)="seeMessages = !seeMessages"
+            [routerLink]="[seeMessages ? '/admin' : 'view-messages']"
+            [ngClass]="[
+              seeMessages ? 'btn btn-outline-danger' : 'btn btn-outline-primary'
+            ]"
+            class="rounded-pill pull-right"
+          >
+            {{ seeMessages ? "Close Messages" : "View Messages" }}
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- tasks option card -->
+    <div *ngIf="!seeAdmins && !seeEmployees && !seeMessages" class="card m-3">
+      <div class="card-body card shadow">
+        <img
+          src="../../assets/admin/tasks.png"
+          alt="admin"
+          class="rounded-circle img-fluid"
+        />
+
+        <div class="d-flex justify-content-end">
+          <a
+            (click)="seeTasks = !seeTasks"
+            [routerLink]="[seeTasks ? '/admin' : 'view-tasks']"
+            [ngClass]="[
+              seeTasks ? 'btn btn-outline-danger' : 'btn btn-outline-primary'
+            ]"
+            class="rounded-pill pull-right"
+          >
+            {{ seeTasks ? "Close Tasks" : "View Tasks" }}
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="container">
+  <router-outlet></router-outlet>
+</div>
