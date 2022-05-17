@@ -8,11 +8,25 @@ import { ViewEmployeeComponent } from './admin/view-employee/view-employee.compo
 import { ViewMessagesComponent } from './admin/view-messages/view-messages.component';
 import { ViewTasksComponent } from './admin/view-tasks/view-tasks.component';
 import { EmployeeComponent } from './employee/employee.component';
+import { ForgotPasswordComponent } from './login/forgot-password/forgot-password.component';
 import { LoginComponent } from './login/login.component';
+import { RegisterComponent } from './login/register/register.component';
 
 const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
   { path: 'login', component: LoginComponent, data: { title: 'Login' } },
+
+  {
+    path: 'register',
+    component: RegisterComponent,
+    data: { title: 'Request Register' },
+  },
+
+  {
+    path: 'forgot-password',
+    component: ForgotPasswordComponent,
+    data: { title: 'Forgot Password' },
+  },
   {
     path: 'admin',
     component: AdminComponent,

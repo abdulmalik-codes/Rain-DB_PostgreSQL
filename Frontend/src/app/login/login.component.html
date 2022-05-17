@@ -1,12 +1,12 @@
 <div class="container d-flex justify-content-center text-center">
   <!-- login -->
-  <form
-    *ngIf="employeeLogin"
-    #loginForm="ngForm"
-    (ngSubmit)="onLoginEmployee()"
-  >
+  <form #loginForm="ngForm" (ngSubmit)="loginAdmin(loginForm.value)">
     <div class="card m-5" style="width: 500px">
       <h5 class="card-title m-2">Login</h5>
+
+      <p>
+        {{ errors }}
+      </p>
       <div class="card-body">
         <div class="row">
           <div class="col-sm-3">
@@ -43,7 +43,7 @@
       <div class="">
         <button class="btn btn-outline-success m-1">Login</button>
         <button
-          (click)="onShowRegisterEmployee()"
+          [routerLink]="['/register']"
           type="button"
           class="btn btn-outline-primary m-1"
         >
@@ -51,173 +51,7 @@
         </button>
       </div>
 
-      <a class="m-2" (click)="onForgotPassword()">forgot password</a>
-    </div>
-  </form>
-
-  <!-- employee register -->
-  <form
-    *ngIf="registerEmployee"
-    #registerEmployeeForm="ngForm"
-    (ngSubmit)="requestRegister()"
-  >
-    <div class="card m-5" style="width: 500px">
-      <h5 class="card-title m-2">Fill in details to request register</h5>
-      <div class="card-body">
-        <div class="row">
-          <div class="col-sm-3">
-            <p class="mb-0">Name</p>
-          </div>
-          <div class="col-sm-9">
-            <input
-              ngModel
-              id="name"
-              name="name"
-              class="form-control text-muted mb-0"
-              type="text"
-              required
-            />
-          </div>
-        </div>
-        <hr />
-        <div class="row">
-          <div class="col-sm-3">
-            <p class="mb-0">Surname</p>
-          </div>
-          <div class="col-sm-9">
-            <input
-              ngModel
-              id="surname"
-              name="surname"
-              class="form-control text-muted mb-0"
-              type="text"
-              required
-            />
-          </div>
-        </div>
-        <hr />
-        <div class="row">
-          <div class="col-sm-3">
-            <p class="mb-0">Cell</p>
-          </div>
-          <div class="col-sm-9">
-            <input
-              ngModel
-              id="cell"
-              name="cell"
-              class="form-control text-muted mb-0"
-              type="text"
-              required
-            />
-          </div>
-        </div>
-        <hr />
-        <div class="row">
-          <div class="col-sm-3">
-            <p class="mb-0">Position</p>
-          </div>
-          <div class="col-sm-9">
-            <input
-              ngModel
-              id="position"
-              name="position"
-              class="form-control text-muted mb-0"
-              type="text"
-              required
-            />
-          </div>
-        </div>
-        <hr />
-        <div class="row">
-          <div class="col-sm-3">
-            <p class="mb-0">Email</p>
-          </div>
-          <div class="col-sm-9">
-            <input
-              ngModel
-              id="email"
-              name="email"
-              class="form-control text-muted mb-0"
-              type="email"
-              required
-            />
-          </div>
-        </div>
-        <hr />
-        <div class="row">
-          <div class="col-sm-3">
-            <p class="mb-0">Password</p>
-          </div>
-          <div class="col-sm-9">
-            <input
-              ngModel
-              id="password"
-              name="password"
-              class="form-control text-muted mb-0"
-              type="password"
-              required
-            />
-          </div>
-        </div>
-        <!--
-          <hr />
-          <div class="row">
-          <div class="col-sm-3">
-            <p class="mb-0">Profile Picture</p>
-          </div>
-          <div class="col-sm-9">
-            <input type="file" class="form-control text-muted mb-0" />
-          </div>
-        </div> -->
-      </div>
-      <div class="btn-group m-2">
-        <button class="btn btn-success">Request register</button>
-        <button
-          (click)="onCancelRequest()"
-          type="button"
-          class="btn btn-outline-danger"
-        >
-          Cancel
-        </button>
-      </div>
-    </div>
-  </form>
-
-  <!-- forgot password -->
-  <form
-    *ngIf="forgotPassword"
-    #forgotPasswordForm="ngForm"
-    (ngSubmit)="requestRegister()"
-  >
-    <div class="card m-5" style="width: 500px">
-      <h5 class="card-title m-2">Forgot Password</h5>
-      <div class="card-body">
-        <div class="row">
-          <div class="col-sm-3">
-            <p class="mb-0">Email</p>
-          </div>
-          <div class="col-sm-9">
-            <input
-              required
-              ngModel
-              id="email"
-              name="email"
-              class="form-control text-muted mb-0"
-              type="email"
-            />
-          </div>
-        </div>
-      </div>
-      <div class="">
-        <button class="btn btn-outline-success m-1">Request Password</button>
-        <button
-          (click)="onCancelForgot()"
-          type="button"
-          class="btn btn-outline-danger m-1"
-        >
-          Cancel
-        </button>
-      </div>
+      <a [routerLink]="['/forgot-password']" class="m-2">forgot password</a>
     </div>
   </form>
 </div>

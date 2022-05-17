@@ -1,5 +1,5 @@
 <nav class="m-4 p-2">
-  <ul class="nav d-flex justify-content-end">
+  <ul *ngIf="adminLogged" class="nav d-flex justify-content-end">
     <!-- admin option  -->
     <li *ngIf="!seeEmployees && !seeMessages && !seeTasks">
       <a

@@ -1,0 +1,126 @@
+<!-- employee register -->
+
+<div class="container d-flex justify-content-center text-center">
+  <form #registerEmployeeForm="ngForm" (ngSubmit)="requestRegister()">
+    <div class="card m-5" style="width: 500px">
+      <h5 class="card-title m-2">Fill in details to request register</h5>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-sm-3">
+            <p class="mb-0">Name</p>
+          </div>
+          <div class="col-sm-9">
+            <input
+              ngModel
+              id="name"
+              name="name"
+              class="form-control text-muted mb-0"
+              type="text"
+              required
+            />
+          </div>
+        </div>
+        <hr />
+        <div class="row">
+          <div class="col-sm-3">
+            <p class="mb-0">Surname</p>
+          </div>
+          <div class="col-sm-9">
+            <input
+              ngModel
+              id="surname"
+              name="surname"
+              class="form-control text-muted mb-0"
+              type="text"
+              required
+            />
+          </div>
+        </div>
+        <hr />
+        <div class="row">
+          <div class="col-sm-3">
+            <p class="mb-0">Cell</p>
+          </div>
+          <div class="col-sm-9">
+            <input
+              ngModel
+              id="cell"
+              name="cell"
+              class="form-control text-muted mb-0"
+              type="text"
+              required
+            />
+          </div>
+        </div>
+        <hr />
+        <div class="row">
+          <div class="col-sm-3">
+            <p class="mb-0">Position</p>
+          </div>
+          <div class="col-sm-9">
+            <input
+              ngModel
+              id="position"
+              name="position"
+              class="form-control text-muted mb-0"
+              type="text"
+              required
+            />
+          </div>
+        </div>
+        <hr />
+        <div class="row">
+          <div class="col-sm-3">
+            <p class="mb-0">Email</p>
+          </div>
+          <div class="col-sm-9">
+            <input
+              ngModel
+              id="email"
+              name="email"
+              class="form-control text-muted mb-0"
+              type="email"
+              required
+            />
+          </div>
+        </div>
+        <hr />
+        <div class="row">
+          <div class="col-sm-3">
+            <p class="mb-0">Password</p>
+          </div>
+          <div class="col-sm-9">
+            <input
+              ngModel
+              id="password"
+              name="password"
+              class="form-control text-muted mb-0"
+              type="password"
+              required
+            />
+          </div>
+        </div>
+        <!--
+        <hr />
+        <div class="row">
+        <div class="col-sm-3">
+          <p class="mb-0">Profile Picture</p>
+        </div>
+        <div class="col-sm-9">
+          <input type="file" class="form-control text-muted mb-0" />
+        </div>
+      </div> -->
+      </div>
+      <div class="btn-group m-2">
+        <button class="btn btn-success">Request register</button>
+        <button
+          [routerLink]="['/login']"
+          type="button"
+          class="btn btn-outline-danger"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </form>
+</div>

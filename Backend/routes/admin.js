@@ -3,25 +3,11 @@ const { Router } = require("express");
 const router = Router();
 
 const pool = require("../db");
-
-const nodemailer = require("nodemailer");
-
-// **************
-const util = require("util");
-
-const path = require("path");
-const { json } = require("body-parser");
+const transporter = require("../db/email");
 
 // **************
 
-// email settings
-let transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: "62545a@gmail.com",
-    pass: "pvkjnaptzgklizin",
-  },
-});
+// **************
 
 // routes and methods
 router.all("/", (request, response, next) => {
@@ -48,7 +34,7 @@ router
       password,
     ]);
     // response.type("json");
-    response.json();
+    // response.json();
     // response.redirect("http://localhost:2500/employee");
     // response.send("added");
     // response.send("added admin");
@@ -95,6 +81,9 @@ router
       response.json();
     });
   });
+
+// verification
+checkEmail = (request, response, next) => {};
 
 // employees
 

@@ -17,6 +17,8 @@ import { ViewMessagesComponent } from './admin/view-messages/view-messages.compo
 import { ViewTasksComponent } from './admin/view-tasks/view-tasks.component';
 import { SingleAdminComponent } from './admin/view-admin/single-admin/single-admin.component';
 import { SingleEmployeeComponent } from './admin/view-employee/single-employee/single-employee.component';
+import { RegisterComponent } from './login/register/register.component';
+import { ForgotPasswordComponent } from './login/forgot-password/forgot-password.component';
 
 @NgModule({
   declarations: [
@@ -32,6 +34,8 @@ import { SingleEmployeeComponent } from './admin/view-employee/single-employee/s
     ViewTasksComponent,
     SingleAdminComponent,
     SingleEmployeeComponent,
+    RegisterComponent,
+    ForgotPasswordComponent,
   ],
   imports: [
     BrowserModule,

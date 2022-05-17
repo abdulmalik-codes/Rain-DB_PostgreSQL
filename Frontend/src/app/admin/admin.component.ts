@@ -20,8 +20,12 @@ export class AdminComponent implements OnInit, OnChanges {
     this.fetchEmployees();
     this.title = this.titleService.getTitle();
     console.log('Title of page:', this.title);
+    console.log('Admin is logged:', this.showAdminOptions);
   }
   ngOnChanges(changes: SimpleChanges): void {}
+
+  adminLogged = true;
+  // change way look at this
 
   optionSelected = false;
 

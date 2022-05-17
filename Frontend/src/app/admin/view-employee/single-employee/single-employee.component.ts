@@ -19,8 +19,8 @@ export class SingleEmployeeComponent implements OnInit {
   }
 
   employee: Employee[] = [];
-  // get employee details
 
+  // get employee details
   private fetchEmployee(employee: string) {
     this.http
       .get<{ [singleEmployee: string]: Employee }>(
@@ -44,5 +44,74 @@ export class SingleEmployeeComponent implements OnInit {
       .subscribe((employee) => {
         this.employee = employee;
       });
+  }
+
+  // get input values
+  employeeName: any;
+  updateEmployeeName(n: any) {
+    this.employeeName = n.target.value;
+  }
+
+  employeeSurname: any;
+  updateEmployeeSurname(s: any) {
+    this.employeeSurname = s.target.value;
+  }
+
+  employeeCell: any;
+  updateEmployeeCell(c: any) {
+    this.employeeCell = c.target.value;
+  }
+
+  employeePosition: any;
+  updateEmployeePosition(po: any) {
+    this.employeePosition = po.target.value;
+  }
+
+  employeePassword: any;
+  updateEmployeePassword(pa: any) {
+    this.employeePassword = pa.target.value;
+  }
+
+  // edit employee
+  seeEditEmployee = false;
+
+  editEmployee(employeeEmail: string) {
+    let responseBody = {
+      name: this.employeeName,
+      surname: this.employeeSurname,
+      cell: this.employeeCell,
+      position: this.employeePosition,
+      password: this.employeePassword,
+    };
+
+    this.http
+      .put(
+        `http://localhost:3000/admin/employee/${employeeEmail}`,
+        responseBody,
+        { responseType: 'json' }
+      )
+      .subscribe((responseData) => {
+        console.log(responseData);
+      });
+
+    alert(`Employee ${employeeEmail} updated successfully`);
+  }
+
+  // delete employee
+  deleteEmployee(deleteEmployee: string) {
+    if (
+      confirm(`Are you sure you want to delete employee ${deleteEmployee}?`) ==
+      true
+    ) {
+      this.http
+        .delete(`http://localhost:3000/admin/employee/${deleteEmployee}`)
+        .subscribe((responseData) => {
+          console.log(responseData);
+        });
+
+      alert(`${deleteEmployee} deleted successfully`);
+    } else {
+      alert(`${deleteEmployee} was not deleted `);
+    }
   }
 }
