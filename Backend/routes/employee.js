@@ -23,7 +23,7 @@ router
   .put((request, response) => {
     const { email } = request.params;
     const keys = ["name", "surname", "cell", "position", "password"];
-
+    // when trying to update the user try to send email using req.rows results
     const details = [];
 
     keys.forEach((key) => {

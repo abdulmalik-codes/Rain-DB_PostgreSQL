@@ -1,11 +1,10 @@
 const { Router } = require("express");
+const router = Router();
 
 const admin = require("./admin");
 const employee = require("./employee");
 const login = require("./login");
 const forgotPassword = require("./forgotPassword");
-
-const router = Router();
 
 router.use("/admin", admin);
 router.use("/employee", employee);

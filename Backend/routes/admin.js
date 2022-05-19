@@ -1,20 +1,33 @@
 // import modules
 const { Router } = require("express");
 const router = Router();
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 const pool = require("../db");
 const transporter = require("../db/email");
-
-// **************
-
-// **************
+const jwt_token = require("../SQL/jwt");
 
 // routes and methods
-router.all("/", (request, response, next) => {
-  response.header("Access-Control-Allow-Origin", "*");
-  response.header("Access-Control-Allow-Headers", "X-Requested-With");
+router.all("/", authenticateToken, (request, response, next) => {
+  response.header("Authorization", "Bearer");
   next();
 });
+
+// authentication parser
+function authenticateToken(request, response, next) {
+  const authHeader = request.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+  if (token == null) return response.sendStatus(401);
+
+  jwt.verify(token, jwt_token.ACCESS_TOKEN_SECRET, (err, admin) => {
+    if (err) return response.sendStatus(403);
+    console.log("yesy yesy");
+    request.admin = admin;
+    console.log(admin);
+    next();
+  });
+}
 
 router
   .route("/")
@@ -27,12 +40,22 @@ router
     });
   })
   // add admin users
-  .post((request, response) => {
-    const { email, password } = request.body;
-    pool.query("INSERT INTO admin(email, password) VALUES($1, $2)", [
-      email,
-      password,
-    ]);
+  .post(async (request, response) => {
+    try {
+      const { email, password } = request.body;
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      pool.query("INSERT INTO admin(email, password) VALUES($1, $2)", [
+        email,
+        hashedPassword,
+      ]);
+
+      response.status(201);
+      response.json("Admin added successfully");
+    } catch {
+      response.status(500).send();
+    }
+
     // response.type("json");
     // response.json();
     // response.redirect("http://localhost:2500/employee");
@@ -53,21 +76,26 @@ router
     });
   })
   // edit an admin user
-  .put((request, response, next) => {
-    const { email } = request.params;
-    const { password } = request.body;
+  .put(async (request, response, next) => {
+    try {
+      const { email } = request.params;
+      const { password } = request.body;
+      const hashedPassword = await bcrypt.hash(password, 10);
 
-    if (password) {
-      pool.query(
-        `UPDATE admin SET password=($1) WHERE email=($2)`,
-        [password, email],
-        (err, res) => {
-          if (err) return next(err);
+      if (password) {
+        pool.query(
+          `UPDATE admin SET password=($1) WHERE email=($2)`,
+          [hashedPassword, email],
+          (err, res) => {
+            if (err) return next(err);
 
-          // response.send("admin updated");
-          response.json(password + " updated");
-        }
-      );
+            // response.send("admin updated");
+            response.json(password + " updated");
+          }
+        );
+      }
+    } catch {
+      response.status(500).send();
     }
   })
   // delete an admin user
@@ -203,33 +231,5 @@ router
 
     const info = await transporter.sendMail(deletedEmployee);
   });
-
-router.route("/login").get((request, response, next) => {
-  const { email } = request.body;
-
-  let emailArray = [];
-
-  pool.query("SELECT * FROM admin WHERE email=($1)", [email], (err, res) => {
-    if (err) return next(err);
-
-    if (email === "email") {
-      console.log(true);
-    }
-
-    emailArray.push();
-
-    if (emailArray.length > 0) {
-      console.log(emailArray.indexOf(email));
-
-      console.log(res.rows, email, "true");
-      response.send("logged in admin");
-    } else {
-      console.log(emailArray.indexOf(email));
-
-      console.log(res.rows, email, "false");
-      response.send("No exists");
-    }
-  });
-});
 
 module.exports = router;

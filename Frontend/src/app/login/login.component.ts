@@ -25,7 +25,7 @@ export class LoginComponent implements OnInit, OnChanges {
     console.log(this.errors);
   }
 
-  loginUrl = `http://localhost:3000/login`;
+  loginUrl = `http://localhost:3000/login/admin`;
 
   errors: string[] = [];
   // showAdminOption = new AdminComponent(this.http, this.titleService);
@@ -60,6 +60,11 @@ export class LoginComponent implements OnInit, OnChanges {
           this.router?.navigate(['admin']);
         }
 
+        if (responseData.hasOwnProperty('accessToken')) {
+          console.log(responseData.valueOf());
+          console.log(responseData.hasOwnProperty('accessToken'));
+          console.log(responseData.toString());
+        }
         if (this.errors.length > 0) {
           console.log(this.errors);
 

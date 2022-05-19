@@ -1,7 +1,7 @@
 -- CREATE TABLE admin(
 --     id serial,
 --     email character varying(50),
---     password character varying(50)
+--     password character varying(200)
 -- );
 
 -- CREATE TABLE employees(

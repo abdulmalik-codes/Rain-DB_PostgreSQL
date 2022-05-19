@@ -1,4 +1,4 @@
--- DROP TABLE employees
+-- DROP TABLE admin
 -- CREATE TABLE testT(
 --     id serial,
 --     test character varying(999)
