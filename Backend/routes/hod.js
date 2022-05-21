@@ -76,6 +76,58 @@ router
         response.json(res.rows);
       }
     );
-  });
+  })
 
-//   post method to add hod users to the hod table
+  //   post method to add hod users to the hod table
+  .post(
+    // some middleware to validate check input
+    [
+      check("email", "Please enter a valid email!").isEmail(),
+      check(
+        "password",
+        "Password length should be greater than 5 characters!"
+      ).isLength({ min: 6 }),
+    ],
+
+    (request, response, next) => {
+      try {
+        // getting email and password from request body (user's inputs)
+        const { email, password } = request.body;
+
+        // validationResult takes in the request body as an argument and returns an array of errors
+        const errors = validationResult(request);
+
+        // check if there are any errors and if there are return the errors in a json response
+        if (!errors.isEmpty()) {
+          return response.status(400).json({
+            errors: errors.array(),
+          });
+        }
+
+        // after inputs passes validation check, I now look to see if the email they inputted already exists
+        pool.query(
+          "SELECT * FROM hod WHERE email=($1)",
+          [email],
+          async (err, res) => {
+            if (err) return next(err);
+
+            // if we receive a response that means the email is already in the db
+            if (res.rows.length > 0) {
+              let hodEmail = res.rows[0].email;
+
+              response.json(`${hodEmail} already exists`);
+            } else {
+              // if there is no response that means that the email is not in the db
+
+              // creating a hashed password
+              const hashedPassword = await bcrypt.hash(password, 10);
+
+              // once validation is completed and the password gets encrypted, we can now add the user to the db
+            }
+          }
+        );
+      } catch {
+        response.status(500).send();
+      }
+    }
+  );
