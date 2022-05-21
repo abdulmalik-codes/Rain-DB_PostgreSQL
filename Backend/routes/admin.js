@@ -276,13 +276,19 @@ router
         let updatedEmployee = {
           from: "62545a@gmail.com",
           to: `${email}`,
-          subject: `${email} updated successfully`,
-          text: `Your updated credentials...
-          name: ${name},
-          surname: ${surname},
-          cell: ${cell},
-          position: ${position},
-          password: ${password},                
+          subject: `RainSA - Your details updated successfully!`,
+          text: `Hello ${name}, 
+          
+          You recently updated your details on your RainEmployee profile.
+          Here are your updated credentials...
+
+          name: ${name}, surname: ${surname}, cell: ${cell}, position: ${position}.
+
+          and to request your password you can click on this link: https://raindbpsql.netlify.app/forgot-password .
+
+          Thank you and let it Rain!
+
+          Rain Admin                          
           `,
         };
 
