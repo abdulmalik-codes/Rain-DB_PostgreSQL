@@ -61,9 +61,6 @@ export class LoginComponent implements OnInit, OnChanges {
         }
 
         if (responseData.hasOwnProperty('accessToken')) {
-          console.log(responseData.valueOf());
-          console.log(responseData.hasOwnProperty('accessToken'));
-          console.log(responseData.toString());
         }
         if (this.errors.length > 0) {
           console.log(this.errors);

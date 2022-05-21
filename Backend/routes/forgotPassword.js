@@ -1,7 +1,7 @@
 const { Router } = require("express");
 const router = Router();
-const pool = require("../db/index");
-const transporter = require("../db/email");
+const pool = require("../configured/index");
+const transporter = require("../configured/email");
 
 router.route("/employees").post((request, response, next) => {
   const { email } = request.body;

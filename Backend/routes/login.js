@@ -2,9 +2,9 @@ const { Router } = require("express");
 const router = Router();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const jwt_token = require("../SQL/jwt");
+const jwt_token = require("../secrets/jwt");
 
-const pool = require("../db/index");
+const pool = require("../configured/index");
 
 // admin login and authentication
 router
@@ -29,17 +29,42 @@ router
           if (await bcrypt.compare(password, adminPassword)) {
             // authentication passed
             // jwt
+
+            /*  
+
+            // simplifi solution
+            
+            jwt.sign(admin, "secretkey", (err, token) => {
+              response.json({
+                token,
+              });
+            });
+            
+            */
+
+            /* 
+
+           // webdev solution
+                     
+           */
             const accessToken = generateAccessToken(admin);
             const refreshToken = jwt.sign(
               admin,
               jwt_token.REFRESH_TOKEN_SECRET
             );
             refreshTokens.push(refreshToken);
-            response.json({
-              accessToken: accessToken,
-              refreshToken: refreshToken,
-            });
-            console.log("success");
+            // response.json({
+            //   accessToken: accessToken,
+            //   refreshToken: refreshToken,
+            // });
+
+            response.json(accessToken);
+            // response.header("Authorization", `Bearer ${accessToken}`);
+            // response.set("Authorization", {Bearer: accessToken});
+
+            // response.cookie("accessToken", accessToken, { httpOnly: true });
+            // response.redirect("http://localhost:3000/admin");
+            console.log(accessToken);
           } else {
             response.json("Employee Does not Exist");
             console.log("not allowed");
@@ -85,7 +110,7 @@ router.route("/token").post((request, response) => {
 
 // generate token
 function generateAccessToken(admin) {
-  return jwt.sign(admin, jwt_token.ACCESS_TOKEN_SECRET, { expiresIn: "30s" });
+  return jwt.sign(admin, jwt_token.ACCESS_TOKEN_SECRET, { expiresIn: "1h" });
 }
 
 module.exports = router;

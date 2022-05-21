@@ -3,7 +3,7 @@ const nodemailer = require("nodemailer");
 const {
   service,
   auth: { user, pass },
-} = require("../SQL/email_config");
+} = require("../secrets/email_config");
 
 let transporter = nodemailer.createTransport({
   service,
