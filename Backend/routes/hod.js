@@ -1,7 +1,7 @@
 // modules imported
 
 // router module from express to create routes in a separate folder/file
-const { Router, response } = require("express");
+const { Router } = require("express");
 // creating a router variable to call the router function
 const router = Router();
 
@@ -35,6 +35,7 @@ function authenticateToken(request, response, next) {
   //   token = authHeader and auth header is {'authorization' 'bearer'}
   const token = authHeader && authHeader.split(" ")[1];
 
+  // response would say forbidden
   if (token == null) return response.sendStatus(401);
 
   //   check if token matches the secret access token
@@ -49,14 +50,6 @@ function authenticateToken(request, response, next) {
 }
 
 // ******************************************* //
-
-// router.all method to put jwt all requests with this route
-router.all("/", (request, response, next) => {
-  // sets the headers to authorization
-  response.header("Authorization", "Bearer");
-
-  next();
-});
 
 // methods for all /hod routes
 router
@@ -91,7 +84,7 @@ router
 
     (request, response, next) => {
       try {
-        // getting email and password from request body (user's inputs)
+        // getting details from request body (hod's inputs)
         const { name, surname, cell, department, email, password } =
           request.body;
 
@@ -126,10 +119,47 @@ router
               // once validation is completed and the password gets encrypted, we can now add the user to the db
               pool.query(
                 `INSERT INTO hod(name, surname, cell, department, email, password) VALUES($1, $2, $3, $4, $5, $6)`,
-                [name, surname, cell, department, email, hashedPassword]
+                [name, surname, cell, department, email, hashedPassword],
+                (err, res) => {
+                  if (err) return next(err);
+
+                  pool.query(
+                    `SELECT * FROM hod WHERE email=($1)`,
+                    [email],
+                    async (err, res) => {
+                      if (err) return next(err);
+
+                      email = res.rows[0].email;
+                      password = res.rows[0].password;
+                      name = res.rows[0].name;
+
+                      let welcomeHodEmail = {
+                        from: "62545a@gmail.com",
+                        to: `${email}`,
+                        subject: `Welcome to RainSA ${name}`,
+                        text: `Hello ${name},
+                        
+                        You have been successfully added to the Rain employee database.
+
+                        Log into your account with your email: '${email}' and password: '${password}'. 
+                        
+                        Link: https://raindbpsql.netlify.app/
+
+                        Thank you and let it Rain!
+
+                        Rain Admin
+                        `,
+                      };
+                      // once email is set up you can now send it
+                      const info = await transporter.sendMail(welcomeHodEmail);
+
+                      response.json(`Email sent`);
+                    }
+                  );
+                }
               );
 
-              response.status(201).json("hod added successfully");
+              response.status(201).json("Hod added successfully");
             }
           }
         );
@@ -141,20 +171,23 @@ router
 
 // ******************************************* //
 
-// router.all method to secure all routes with this path
-router.all("/:hod-email", (request, response, next) => {
-  // sets the headers to authorization
-  response.header("Authorization", "Bearer");
-
-  next();
-});
-
 // methods for all /hod/:hod-email routes
 router
   .route("/:hod-email")
 
   // no need for a get method with this email because our login function takes care of this already
+  .get((request, response, next) => {
+    // gets the email from the url path
+    const { email } = request.params;
 
+    // sql query to get hod from db
+    pool.query(`SELECT * FROM hod WHERE email=($1)`, [email], (err, res) => {
+      if (err) return next(err);
+
+      // hod details returned
+      response.json(res.rows);
+    });
+  })
   // put method to edit and update the hod's details
   .put((request, response, next) => {
     try {
@@ -258,7 +291,40 @@ router
     } catch {
       response.status(500).send();
     }
+  })
+
+  // delete hod from db
+  .delete(async (request, response, next) => {
+    // pulls email from url path
+    const { email } = request.params;
+
+    // query to delete hod
+    pool.query(`DELETE FROM hod WHERE email=($1)`, [email], (err, res) => {
+      if (err) return next(err);
+
+      response.json(`Hod deleted successfully`);
+    });
+
+    let deletedHod = {
+      from: "62545a@gmail.com",
+      to: `${email}`,
+      subject: `Goodbye from RainSA`,
+      text: `Hello and Goodbye,
+      
+      You have been removed from the Rain Employee database
+      
+      We hope we have parted on good terms and that you'll continue to support RainSA unconditionally
+      
+      Thank you and good luck with your future endeavors
+      
+      Rain Admin`,
+    };
+
+    // email will be sent
+    const info = await transporter.sendMail(deletedHod);
   });
+
+// ******************************************* //
 
 // export this file using router variable to use externally
 module.exports = router;
