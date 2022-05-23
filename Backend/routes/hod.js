@@ -139,7 +139,7 @@ router
                         subject: `Welcome to RainSA ${name}`,
                         text: `Hello ${name},
                         
-                        You have been successfully added to the Rain employee database.
+                        You have been successfully added to the Rain Hod database.
 
                         Log into your account with your email: '${email}' and password: '${password}'. 
                         

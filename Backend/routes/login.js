@@ -110,7 +110,7 @@ router.route("/token").post((request, response) => {
 
 // generate token
 function generateAccessToken(admin) {
-  return jwt.sign(admin, jwt_token.ACCESS_TOKEN_SECRET, { expiresIn: "1h" });
+  return jwt.sign(admin, jwt_token.ACCESS_TOKEN_SECRET, { expiresIn: "1d" });
 }
 
 module.exports = router;
