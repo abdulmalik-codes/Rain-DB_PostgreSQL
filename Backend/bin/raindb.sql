@@ -2,6 +2,7 @@
 -- DROP TABLE employees;
 -- DROP TABLE departments;
 -- DROP TABLE hod;
+-- DROP TABLE hod_department;
 -- DROP TABLE tasks;
 -- DROP TABLE messages;
 

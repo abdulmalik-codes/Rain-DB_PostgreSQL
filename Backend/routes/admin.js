@@ -163,11 +163,9 @@ router
                   // once email is set up you can now send it
                   const info = await transporter.sendMail(welcomeAdminEmail);
 
-                  response.json(`Email sent`);
+                  response.status(201).json("Admin added successfully");
                 }
               );
-
-              response.status(201).json("Admin added successfully");
             }
           }
         );
@@ -230,7 +228,7 @@ router
 
   // delete all departments
   .delete((request, response, next) => {
-    pool.query(`DROP TABLE IF EXISTS departments`, (err, res) => {
+    pool.query(`TRUNCATE TABLE departments`, (err, res) => {
       if (err) return next(err);
 
       response.json(`Departments table deleted successfully!`);
@@ -364,7 +362,7 @@ router
 
   // delete all hod
   .delete((request, response, next) => {
-    pool.query(`DROP TABLE IF EXISTS hod`, (err, res) => {
+    pool.query(`TRUNCATE TABLE hod`, (err, res) => {
       if (err) return next(err);
 
       response.json(`Hod table deleted successfully!`);
@@ -569,9 +567,40 @@ router
 // ************ ROUTES FOR SINGLE USERS *********** //
 // ________________________________________________ //
 
+// methods for all /admin/department/single-department routes
+router
+  .route("/department/:name")
+
+  // view department by name
+  .get((request, response, next) => {})
+
+  // edit department
+  .put((request, response, next) => {})
+
+  // delete department
+  .delete((request, response, next) => {});
+
+// ******************************************* //
+
+// methods for all /admin/hod/single-hod routes
+router
+  .route("/hod/:email")
+
+  // view hod by email
+  .get((request, response, next) => {})
+
+  // edit hod
+  .put((request, response, next) => {})
+
+  // delete hod
+  .delete((request, response, next) => {});
+
+// ******************************************* //
+
 // methods for all /admin/employees/single-employee routes
 router
   .route("/employee/:email")
+
   // view employee by email
   .get((request, response, next) => {
     const { email } = request.params;
@@ -586,6 +615,7 @@ router
       }
     );
   })
+
   // edit employee
   .put((request, response, next) => {
     const { email } = request.params;
@@ -628,7 +658,7 @@ router
         position = res.rows[0].position;
         password = res.rows[0].password;
 
-        let updatedEmployee = {
+        let updatedEmployeeEmail = {
           from: "62545a@gmail.com",
           to: `${email}`,
           subject: `RainSA - Your details updated successfully!`,
@@ -647,39 +677,77 @@ router
           `,
         };
 
-        const info = await transporter.sendMail(updatedEmployee);
+        const info = await transporter.sendMail(updatedEmployeeEmail);
 
         response.json("Employee details updated");
       }
     );
   })
+
   // delete employee
-  .delete(async (request, response, next) => {
+  .delete(authenticateToken, (request, response, next) => {
     const { email } = request.params;
 
     pool.query(
-      "DELETE FROM employees WHERE email=($1)",
+      `SELECT * FROM employees WHERE email=($1)`,
       [email],
       (err, res) => {
         if (err) return next(err);
-        response.json();
+
+        if (res.rows.length === 0) {
+          response.json(`Employee does not exist`);
+        } else {
+          // employee exists
+          let adminEmail = request.admin.email;
+          pool.query(
+            `SELECT password FROM admin WHERE email=($1)`,
+            [adminEmail],
+            async (err, res) => {
+              if (err) return next(err);
+
+              let adminPassword = res.rows[0].password;
+              let passwordEntered = request.body.password;
+
+              const comparedPassword = await bcrypt.compare(
+                passwordEntered,
+                adminPassword
+              );
+
+              if (!comparedPassword) {
+                response.json(`Password is invalid`);
+              } else {
+                pool.query(
+                  "DELETE FROM employees WHERE email=($1)",
+                  [email],
+                  async (err, res) => {
+                    if (err) return next(err);
+
+                    let deletedEmployee = {
+                      from: "62545a@gmail.com",
+                      to: `${email}`,
+                      subject: `Goodbye from RainSA  ${email}`,
+                      text: `You have been removed from the Rain Employees Database`,
+                    };
+
+                    const info = await transporter.sendMail(deletedEmployee);
+
+                    response.json(`Employee removed from database`);
+                  }
+                );
+              }
+            }
+          );
+        }
       }
     );
-
-    let deletedEmployee = {
-      from: "62545a@gmail.com",
-      to: `${email}`,
-      subject: `Goodbye from RainSA  ${email}`,
-      text: `You have been removed from the Rain Employees Database`,
-    };
-
-    const info = await transporter.sendMail(deletedEmployee);
   });
 
 // ******************************************* //
 
-// these are routes for single admin users
+// methods for all /admin/single-admin routes
 router
+
+  // these are routes for single admin users
   .route("/:email")
 
   // get admin by email
@@ -687,44 +755,117 @@ router
     const { email } = request.params;
     pool.query("SELECT * FROM admin WHERE email=$1", [email], (err, res) => {
       if (err) return next(err);
-
-      response.json(res.rows);
+      if (res.rows.length === 0) {
+        response.json(`${email} doesn't exist`);
+      } else {
+        response.json(res.rows);
+      }
     });
   })
 
   // edit an admin user
-  .put(async (request, response, next) => {
-    try {
-      const { email } = request.params;
-      const { password } = request.body;
-      const hashedPassword = await bcrypt.hash(password, 10);
+  .put((request, response, next) => {
+    const { email } = request.params;
 
-      if (password) {
-        pool.query(
-          `UPDATE admin SET password=($1) WHERE email=($2)`,
-          [hashedPassword, email],
-          (err, res) => {
-            if (err) return next(err);
+    pool.query(
+      `SELECT * FROM admin WHERE email=($1)`,
+      [email],
+      async (err, res) => {
+        if (err) return next(err);
 
-            // response.send("admin updated");
-            response.json(password + " updated");
+        if (res.rows.length === 0) {
+          response.json(`Admin does not exist`);
+        } else {
+          try {
+            const { password } = request.body;
+            const hashedPassword = await bcrypt.hash(password, 10);
+
+            if (password) {
+              pool.query(
+                `UPDATE admin SET password=($1) WHERE email=($2)`,
+                [hashedPassword, email],
+                async (err, res) => {
+                  if (err) return next(err);
+
+                  let updateAdminEmail = {
+                    from: "62545a@gmail.com",
+                    to: `${email}`,
+                    subject: `Update Successful `,
+                    text: `Hello ${email},
+                      
+                      Your password has been successfully updated. 
+  
+                      Thank you and let it Rain!
+  
+                      Rain Admin
+                      `,
+                  };
+
+                  // once email is set up you can now send it
+                  const info = await transporter.sendMail(updateAdminEmail);
+
+                  response.json(`${email} password updated`);
+                }
+              );
+            }
+          } catch {
+            response.status(500).send();
           }
-        );
+        }
       }
-    } catch {
-      response.status(500).send();
-    }
+    );
   })
 
   // delete an admin user
   .delete((request, response, next) => {
     const { email } = request.params;
 
-    pool.query("DELETE FROM admin WHERE email=($1)", [email], (err, res) => {
+    pool.query(`SELECT * FROM admin WHERE email=($1)`, [email], (err, res) => {
       if (err) return next(err);
 
-      // response.send(`deleted admin ${email} `);
-      response.json();
+      if (res.rows.length === 0) {
+        response.json(`${email} does not exist`);
+      } else {
+        pool.query(
+          `SELECT password from admin WHERE email=($1)`,
+          [email],
+          async (err, res) => {
+            if (err) return next(err);
+
+            let adminPassword = res.rows[0].password;
+            let passwordEntered = request.body.password;
+            const comparedPassword = await bcrypt.compare(
+              passwordEntered,
+              adminPassword
+            );
+
+            if (!comparedPassword) {
+              response.json(`Password entered is invalid`);
+            } else {
+              // if the passwords match the admin can be deleted
+              pool.query(
+                "DELETE FROM admin WHERE email=($1)",
+                [email],
+                async (err, res) => {
+                  if (err) return next(err);
+
+                  // email admin
+                  let deletedAdmin = {
+                    from: "62545a@gmail.com",
+                    to: `${email}`,
+                    subject: `Goodbye from RainSA  ${email}`,
+                    text: `You have been removed from the Rain Admin Database`,
+                  };
+
+                  const info = await transporter.sendMail(deletedAdmin);
+
+                  response.json(`Admin removed from Database`);
+                }
+              );
+            }
+          }
+        );
+      }
     });
   });
 
