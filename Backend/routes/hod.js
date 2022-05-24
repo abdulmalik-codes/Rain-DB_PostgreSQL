@@ -8,9 +8,6 @@ const router = Router();
 // bcrypt to encrypt passwords
 const bcrypt = require("bcrypt");
 
-// jwt to protect express routes
-const jwt = require("jsonwebtoken");
-
 // validation to check if input meets requirements
 const { check, validationResult } = require("express-validator");
 
@@ -21,33 +18,6 @@ const pool = require("../configured/index");
 
 // connection to email service
 const transporter = require("../configured/email");
-
-// connection to jwt token
-const jwt_token = require("../secrets/jwt");
-
-// ******************************************* //
-
-// function to authenticate jwt token
-function authenticateToken(request, response, next) {
-  // setting header to 'authorization'
-  const authHeader = request.headers["authorization"];
-
-  //   token = authHeader and auth header is {'authorization' 'bearer'}
-  const token = authHeader && authHeader.split(" ")[1];
-
-  // response would say forbidden
-  if (token == null) return response.sendStatus(401);
-
-  //   check if token matches the secret access token
-  jwt.verify(token, jwt_token.ACCESS_TOKEN_SECRET, (err, hod) => {
-    if (err) return response.sendStatus(403);
-
-    // setting the hod argument to the request object that I created when the hod logs in
-    request.hod = hod;
-
-    next();
-  });
-}
 
 // ******************************************* //
 

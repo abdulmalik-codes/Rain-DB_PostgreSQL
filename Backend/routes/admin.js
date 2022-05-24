@@ -613,7 +613,6 @@ router
             response.json(`No department`);
           } else {
             let oldName = res.rows[0].name;
-            // const { name } = response.body;
 
             pool.query(
               `UPDATE departments SET name=($1) WHERE name=($2)`,
@@ -642,13 +641,163 @@ router
   .route("/hod/:email")
 
   // view hod by email
-  .get((request, response, next) => {})
+  .get((request, response, next) => {
+    const { email } = request.params;
+
+    pool.query(`SELECT * FROM hod WHERE email=($1)`, [email], (err, res) => {
+      if (err) return next(err);
+
+      if (res.rows.length === 0) {
+        response.json(`Hod does not exist`);
+      } else {
+        response.json(res.rows);
+      }
+    });
+  })
 
   // edit hod
-  .put((request, response, next) => {})
+  .put((request, response, next) => {
+    try {
+      // getting the email from the path
+      const { email } = request.params;
 
-  // delete hod
-  .delete((request, response, next) => {});
+      // setting keys for the input
+      const keys = ["name", "surname", "cell", "department", "password"];
+
+      // an array to store all the details
+      const details = [];
+
+      // if there is a value in the key that needs to be updated this method takes care of it
+      keys.forEach((key) => {
+        // store the keys in the details array if there are any
+        if (request.body[key]) details.push(key);
+
+        // for each detail, update its value
+        details.forEach((detail) => {
+          pool.query(
+            `UPDATE hod SET ${detail}=($1) WHERE email=($2)`,
+
+            // get the value of detail from the request body
+            [request.body[detail], email],
+
+            (err, res) => {
+              if (err) return next(err);
+            }
+          );
+        });
+      });
+
+      // getting the updated password from the table and encrypting it again
+      pool.query(
+        `SELECT password FROM hod WHERE email=($1)`,
+        [email],
+        async (err, res) => {
+          if (err) return next(err);
+
+          // password from the response
+          const hodPassword = res.rows[0].password;
+
+          // encrypting the password
+          const hashedPassword = await bcrypt.hash(hodPassword, 10);
+
+          pool.query(
+            `UPDATE hod SET password=($1) WHERE email=($2)`,
+            [hashedPassword, email],
+            (err, res) => {
+              if (err) return next(err);
+            }
+          );
+        }
+      );
+
+      // after all details are updated we can now notify the account holder with an email
+
+      // first we get all the details
+      pool.query(
+        `SELECT * FROM hod WHERE email=($1)`,
+        [email],
+        async (err, res) => {
+          if (err) return next(err);
+
+          // getting the hod details
+          name = res.rows[0].name;
+          surname = res.rows[0].surname;
+          cell = res.rows[0].cell;
+          department = res.rows[0].department;
+          password = res.rows[0].password;
+
+          // object that hold email details that needs to be sent
+          let updateHodEmail = {
+            from: "62545a@gmail.com",
+            to: `${email}`,
+            subject: `RainSA - Your details updated successfully!`,
+            text: `Hello ${name},
+            
+            you recently updated your details on your RainEmployee profile. 
+            Here are your updated credentials...
+            name: ${name}, surname: ${surname}, cell: ${cell}, department: ${department}.
+
+            and to request your password you can click on this link: https://raindbpsql.netlify.app/forgot-password .
+
+            Thank you and let it Rain!
+
+            Rain Admin            
+            `,
+          };
+
+          // once email is set up you can now send it
+          const info = await transporter.sendMail(updateHodEmail);
+
+          response.json(`Hod updated and email sent`);
+        }
+      );
+    } catch {
+      response.status(500).send();
+    }
+  })
+
+  // delete hod from db
+  .delete((request, response, next) => {
+    // pulls email from url path
+    const { email } = request.params;
+
+    pool.query(`SELECT * FROM hod WHERE email=($1)`, [email], (err, res) => {
+      if (err) return next(err);
+
+      if (res.rows.length === 0) {
+        response.json(`Hod does not exist`);
+      } else {
+        // query to delete hod
+        pool.query(
+          `DELETE FROM hod WHERE email=($1)`,
+          [email],
+          async (err, res) => {
+            if (err) return next(err);
+
+            let deletedHod = {
+              from: "62545a@gmail.com",
+              to: `${email}`,
+              subject: `Goodbye from RainSA`,
+              text: `Hello and Goodbye,
+        
+        You have been removed from the Rain Employee database
+        
+        We hope we have parted on good terms and that you'll continue to support RainSA unconditionally
+        
+        Thank you and good luck with your future endeavors
+        
+        Rain Admin`,
+            };
+
+            // email will be sent
+            const info = await transporter.sendMail(deletedHod);
+
+            response.json(`Hod deleted successfully`);
+          }
+        );
+      }
+    });
+  });
 
 // ******************************************* //
 
