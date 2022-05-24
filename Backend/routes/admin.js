@@ -1,7 +1,7 @@
 // modules imported
 
 // router module from express to create routes in a separate folder/file
-const { Router, request } = require("express");
+const { Router } = require("express");
 // creating a router variable to call the router function
 const router = Router();
 
@@ -168,32 +168,34 @@ router
 
   // add a department
   .post((request, response, next) => {
-    const { name } = request.body;
+    const { department, name } = request.body;
 
-    if (!name || name === " ") {
+    if (!department || !name || department === " " || name === " ") {
       response.json(`No value inserted`);
     } else {
       // checking if department exists
       pool.query(
-        `SELECT * FROM departments WHERE name=($1)`,
-        [name],
+        `SELECT * FROM departments WHERE department=($1)`,
+        [department],
         (err, res) => {
           if (err) return next(err);
 
           if (res.rows.length > 0) {
             response.json(`Department already exists`);
           } else {
-            pool.query(
-              `INSERT INTO departments(name) VALUES($1)`,
-              [name],
-              (err, res) => {
-                if (err) return next(err);
+            if (department !== name) {
+              response.json(`Input values do not match!`);
+            } else {
+              pool.query(
+                `INSERT INTO departments(department, name) VALUES($1,$2)`,
+                [department, name],
+                (err, res) => {
+                  if (err) return next(err);
 
-                console.log(res.rows);
-
-                response.status(201).json(`Department created successfully`);
-              }
-            );
+                  response.status(201).json(`Department created successfully`);
+                }
+              );
+            }
           }
         }
       );
@@ -510,8 +512,7 @@ router
                                                               
                                 Thank you and let it Rain!
                                                               
-                                Rain Admin                  
-`,
+                                Rain Admin`,
                                 };
 
                                 // once email is set up, it gets sent
@@ -565,45 +566,71 @@ router
 
 // ******************************************* //
 
-// methods for all /admin/departments/single-department routes
-router
-  // this route shows employees in the selected department
-  .route("/departments/:department")
-
-  // view all employees in selected department
-  .get((request, response, next) => {
-    const { department } = request.params;
-
-    pool.query(
-      `SELECT name, surname, email FROM employees WHERE department=($1)`,
-      [department],
-      (err, res) => {
-        if (err) return next(err);
-
-        if (res.rows.length === 0) {
-          response.json(`Department does not exist`);
-        } else {
-          response.json(res.rows);
-        }
-      }
-    );
-  });
-
-// ******************************************* //
-
 // ________________________________________________ //
 // ************ ROUTES FOR SINGLE USERS *********** //
 // ________________________________________________ //
 
 // methods for all /admin/department/single-department routes
 router
-  .route("/department/:name")
+  .route("/departments/:departmentName")
+  // this route shows employees in the selected department
+  .get((request, response, next) => {
+    const { departmentName } = request.params;
 
-  // view department by name
-  .get((request, response, next) => {})
+    pool.query(
+      `SELECT name, surname, email FROM employees WHERE department=($1)`,
+      [departmentName],
+      (err, res) => {
+        if (err) return next(err);
 
+        if (res.rows.length === 0) {
+          response.json(`No employees in this department`);
+        } else {
+          response.json(res.rows);
+        }
+      }
+    );
+  })
+
+  // NOT ABLE TO EDIT OR DELETE TABLES WITH FK CONSTRAINTS
   // edit department
-  .put((request, response, next) => {})
+  .put((request, response, next) => {
+    const { departmentName } = request.params;
+    const { name } = request.body;
+
+    console.log(name);
+
+    if (!departmentName) {
+      response.json(`No departments`);
+    } else {
+      pool.query(
+        `SELECT * FROM departments WHERE name=($1)`,
+        [departmentName],
+        (err, res) => {
+          if (err) return next(err);
+
+          if (res.rows.length === 0) {
+            response.json(`No department`);
+          } else {
+            let oldName = res.rows[0].name;
+            // const { name } = response.body;
+
+            pool.query(
+              `UPDATE departments SET name=($1) WHERE name=($2)`,
+              [name, oldName],
+              (err, res) => {
+                if (err) return next(err);
+
+                response.json(`Department updated`);
+              }
+            );
+
+            response.json(res.rows[0].name);
+          }
+        }
+      );
+    }
+  })
 
   // delete department
   .delete((request, response, next) => {});
@@ -627,19 +654,23 @@ router
 
 // methods for all /admin/employees/single-employee routes
 router
-  .route("/employee/:email")
+  .route("/employees/:email")
 
   // view employee by email
   .get((request, response, next) => {
     const { email } = request.params;
 
     pool.query(
-      "SELECT * FROM employees WHERE email=$1",
+      `SELECT * FROM employees WHERE email=($1)`,
       [email],
       (err, res) => {
         if (err) return next(err);
 
-        response.json(res.rows);
+        if (res.rows.length === 0) {
+          response.json(`Employee not in db`);
+        } else {
+          response.json(res.rows);
+        }
       }
     );
   })
@@ -648,66 +679,90 @@ router
   .put((request, response, next) => {
     const { email } = request.params;
 
-    // const keys = [
-    //   { name: "name" },
-    //   { surname: "surname" },
-    //   { cell: "cell" },
-    //   { position: "position" },
-    //   { password: "password" },
-    // ];
-    const keys = ["name", "surname", "cell", "position", "password"];
-    const details = [];
-
-    keys.forEach((key) => {
-      if (request.body[key]) details.push(key);
-
-      details.forEach((detail) => {
-        pool.query(
-          `UPDATE employees SET ${detail}=($1) WHERE email=($2)`,
-          [request.body[detail], email],
-          (err, res) => {
-            if (err) return next(err);
-
-            // console.log(request.body[detail]);
-          }
-        );
-      });
-    });
-
     pool.query(
-      "SELECT * FROM employees WHERE email=($1)",
+      `SELECT * FROM employees WHERE email=($1)`,
       [email],
-      async (err, res) => {
+      (err, res) => {
         if (err) return next(err);
 
-        name = res.rows[0].name;
-        surname = res.rows[0].surname;
-        cell = res.rows[0].cell;
-        position = res.rows[0].position;
-        password = res.rows[0].password;
+        console.log(res.rows);
 
-        let updatedEmployeeEmail = {
-          from: "62545a@gmail.com",
-          to: `${email}`,
-          subject: `RainSA - Your details updated successfully!`,
-          text: `Hello ${name}, 
-          
-          You recently updated your details on your RainEmployee profile.
-          Here are your updated credentials...
+        if (res.rows.length === 0) {
+          response.json(`Employee does not exist`);
+        } else {
+          const keys = [
+            "name",
+            "surname",
+            "cell",
+            "position",
+            "department",
+            "hod",
+            "password",
+          ];
+          const details = [];
 
-          name: ${name}, surname: ${surname}, cell: ${cell}, position: ${position}.
+          keys.forEach((key) => {
+            if (request.body[key]) details.push(key);
 
-          and to request your password you can click on this link: https://raindbpsql.netlify.app/forgot-password .
+            details.forEach((detail) => {
+              pool.query(
+                `UPDATE employees SET ${detail}=($1) WHERE email=($2)`,
+                [request.body[detail], email],
+                (err, res) => {
+                  if (err) return next(err);
+                }
+              );
+            });
+          });
 
-          Thank you and let it Rain!
+          pool.query(
+            `SELECT * FROM employees WHERE email=($1)`,
+            [email],
+            async (err, res) => {
+              if (err) return next(err);
 
-          Rain Admin                          
-          `,
-        };
+              name = res.rows[0].name;
+              surname = res.rows[0].surname;
+              cell = res.rows[0].cell;
+              position = res.rows[0].position;
+              department = res.rows[0].department;
+              hod = res.rows[0].hod;
 
-        const info = await transporter.sendMail(updatedEmployeeEmail);
+              password = res.rows[0].password;
+              const hashedPassword = await bcrypt.hash(password, 10);
 
-        response.json("Employee details updated");
+              pool.query(
+                `UPDATE employees SET password=($1) WHERE email=($2)`,
+                [hashedPassword, email],
+                async (err, res) => {
+                  if (err) return next(err);
+
+                  let updatedEmployeeEmail = {
+                    from: "62545a@gmail.com",
+                    to: `${email}`,
+                    subject: `RainSA - Your details updated successfully!`,
+                    text: `Hello ${name}, 
+                
+                You recently updated your details on your RainEmployee profile.
+                Here are your updated credentials...
+      
+                name: ${name}, surname: ${surname}, cell: ${cell}, position: ${position}, department: ${department}, hod: ${hod}.
+      
+                and to request your password you can click on this link: https://raindbpsql.netlify.app/forgot-password .
+      
+                Thank you and let it Rain!
+      
+                Rain Admin`,
+                  };
+
+                  const info = await transporter.sendMail(updatedEmployeeEmail);
+
+                  response.json("Employee details updated");
+                }
+              );
+            }
+          );
+        }
       }
     );
   })
@@ -733,35 +788,39 @@ router
             async (err, res) => {
               if (err) return next(err);
 
-              let adminPassword = res.rows[0].password;
-              let passwordEntered = request.body.password;
-
-              const comparedPassword = await bcrypt.compare(
-                passwordEntered,
-                adminPassword
-              );
-
-              if (!comparedPassword) {
-                response.json(`Password is invalid`);
+              if (res.rows.length === 0) {
+                response.json(`Admin does not exist`);
               } else {
-                pool.query(
-                  "DELETE FROM employees WHERE email=($1)",
-                  [email],
-                  async (err, res) => {
-                    if (err) return next(err);
+                let adminPassword = res.rows[0].password;
+                let passwordEntered = request.body.password;
 
-                    let deletedEmployee = {
-                      from: "62545a@gmail.com",
-                      to: `${email}`,
-                      subject: `Goodbye from RainSA  ${email}`,
-                      text: `You have been removed from the Rain Employees Database`,
-                    };
-
-                    const info = await transporter.sendMail(deletedEmployee);
-
-                    response.json(`Employee removed from database`);
-                  }
+                const comparedPassword = await bcrypt.compare(
+                  passwordEntered,
+                  adminPassword
                 );
+
+                if (!comparedPassword) {
+                  response.json(`Password is invalid`);
+                } else {
+                  pool.query(
+                    `DELETE FROM employees WHERE email=($1)`,
+                    [email],
+                    async (err, res) => {
+                      if (err) return next(err);
+
+                      let deletedEmployee = {
+                        from: "62545a@gmail.com",
+                        to: `${email}`,
+                        subject: `Goodbye from RainSA  ${email}`,
+                        text: `You have been removed from the Rain Employees Database`,
+                      };
+
+                      const info = await transporter.sendMail(deletedEmployee);
+
+                      response.json(`Employee removed from database`);
+                    }
+                  );
+                }
               }
             }
           );
@@ -808,7 +867,9 @@ router
             const { password } = request.body;
             const hashedPassword = await bcrypt.hash(password, 10);
 
-            if (password) {
+            if (!password || password === " ") {
+              response.json(`No password entered`);
+            } else {
               pool.query(
                 `UPDATE admin SET password=($1) WHERE email=($2)`,
                 [hashedPassword, email],

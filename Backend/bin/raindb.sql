@@ -1,9 +1,9 @@
 -- DROP TABLE admin;
--- DROP TABLE employees;
--- DROP TABLE departments;
--- DROP TABLE hod;
--- DROP TABLE hod_department;
 -- DROP TABLE tasks;
+-- DROP TABLE employees;
+-- DROP TABLE hod;
+-- DROP TABLE departments;
+-- DROP TABLE hod_department;
 -- DROP TABLE messages;
 
 -- CREATE TABLE IF NOT EXISTS admin(
@@ -14,7 +14,8 @@
 
 -- CREATE TABLE IF NOT EXISTS departments(
 --     id SERIAL PRIMARY KEY,
---     name character varying(50) NOT NULL UNIQUE
+--     department character varying(50) NOT NULL UNIQUE,
+--     name character varying(50) NOT NULL
 -- );
 
 -- CREATE TABLE IF NOT EXISTS hod(
@@ -25,15 +26,7 @@
 --     department character varying(100) NOT NULL,
 --     email character varying(100) NOT NULL UNIQUE,
 --     password character varying(200) NOT NULL,
---     FOREIGN KEY(department) REFERENCES departments (name)
--- );
-
--- CREATE TABLE IF NOT EXISTS hod_department(
---     id SERIAL PRIMARY KEY,
---     name character varying(50) NOT NULL,
---     department character varying(100) NOT NULL,
---     FOREIGN KEY(name) REFERENCES hod (email),
---     FOREIGN KEY(department) REFERENCES departments (name)
+--     FOREIGN KEY(department) REFERENCES departments (department)
 -- );
 
 -- CREATE TABLE IF NOT EXISTS employees(
@@ -46,7 +39,7 @@
 --     hod character varying(100) NOT NULL,
 --     email character varying(100) NOT NULL UNIQUE,
 --     password character varying(100) NOT NULL,
---     FOREIGN KEY(department) REFERENCES departments (name),
+--     FOREIGN KEY(department) REFERENCES departments (department),
 --     FOREIGN KEY(hod) REFERENCES hod (email)
 -- );
 
@@ -74,22 +67,6 @@
 -- VALUES($1, $2, $3, $4, $5, $6, $7, $8),
 -- ["TASK", "TASK DESCRIPTION", "ME", "NOW", "TOMORROW", "IN PROGRESS", "GHIYAATH", "ADMIN"]
 
--- CREATE TABLE IF NOT EXISTS devops(
---     id serial PRIMARY KEY,
---     hod character varying(100),
---     developers character varying(100),
---     FOREIGN KEY(hod) REFERENCES admin (email),
---     FOREIGN KEY(developers) REFERENCES employees (email)
--- )
-
--- CREATE TABLE IF NOT EXISTS development(
---     id serial PRIMARY KEY,
---     hod character varying(100),
---     testers character varying(100),
---     FOREIGN KEY(hod) REFERENCES admin (email),
---     FOREIGN KEY(testers) REFERENCES employees (email)
--- )
- 
 --  INSERT INTO tasks ( 
 --      name,
 --      description,
@@ -112,5 +89,13 @@
 --    );
 
 
+-- deprecated 
 
+-- CREATE TABLE IF NOT EXISTS hod_department(
+--     id SERIAL PRIMARY KEY,
+--     name character varying(50) NOT NULL,
+--     department character varying(100) NOT NULL,
+--     FOREIGN KEY(name) REFERENCES hod (email),
+--     FOREIGN KEY(department) REFERENCES departments (name)
+-- );
 
