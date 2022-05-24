@@ -30,23 +30,6 @@ router
             // authentication passed
             // jwt
 
-            /*  
-
-            // simplifi solution
-            
-            jwt.sign(admin, "secretkey", (err, token) => {
-              response.json({
-                token,
-              });
-            });
-            
-            */
-
-            /* 
-
-           // webdev solution
-                     
-           */
             const accessToken = generateAccessToken(admin);
             const refreshToken = jwt.sign(
               admin,
@@ -59,15 +42,10 @@ router
             // });
 
             response.json(accessToken);
-            // response.header("Authorization", `Bearer ${accessToken}`);
-            // response.set("Authorization", {Bearer: accessToken});
-
-            // response.cookie("accessToken", accessToken, { httpOnly: true });
-            // response.redirect("http://localhost:3000/admin");
             console.log(accessToken);
           } else {
-            response.json("Employee Does not Exist");
             console.log("not allowed");
+            response.json("Admin Does not Exist");
           }
         }
       }

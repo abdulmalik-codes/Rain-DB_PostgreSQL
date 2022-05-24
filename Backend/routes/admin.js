@@ -1,15 +1,12 @@
 // modules imported
 
 // router module from express to create routes in a separate folder/file
-const { Router } = require("express");
+const { Router, request } = require("express");
 // creating a router variable to call the router function
 const router = Router();
 
 // bcrypt to encrypt passwords
 const bcrypt = require("bcrypt");
-
-// jwt to protect express routes
-const jwt = require("jsonwebtoken");
 
 // validation to check if input meets requirements
 const { check, validationResult } = require("express-validator");
@@ -22,35 +19,8 @@ const pool = require("../configured/index");
 // connection to email service
 const transporter = require("../configured/email");
 
-// connection to jwt token
-const jwt_token = require("../secrets/jwt");
-
 // global variables
 let rainUrl = `https://raindbpsql.netlify.app/`;
-
-// ******************************************* //
-
-// function to authenticate jwt token
-function authenticateToken(request, response, next) {
-  // setting header to 'authorization'
-  const authHeader = request.headers["authorization"];
-
-  //   token = authHeader and auth header is {'authorization' 'bearer'}
-  const token = authHeader && authHeader.split(" ")[1];
-
-  // response would say forbidden
-  if (token == null) return response.sendStatus(401);
-
-  //   check if token matches the secret access token
-  jwt.verify(token, jwt_token.ACCESS_TOKEN_SECRET, (err, admin) => {
-    if (err) return response.sendStatus(403);
-
-    // setting the admin argument to the request object that I created when the admin logs in
-    request.admin = admin;
-
-    next();
-  });
-}
 
 // ******************************************* //
 
@@ -58,13 +28,7 @@ function authenticateToken(request, response, next) {
 // ************ ROUTES FOR ALL USERS *********** //
 // _____________________________________________ //
 
-// router.all method to put jwt all requests with this route
-router.all("/", authenticateToken, (request, response, next) => {
-  // sets the headers to authorization
-  response.header("Authorization", "Bearer");
-
-  next();
-});
+// ******************************************* //
 
 // methods for all /admin routes
 router
@@ -81,8 +45,12 @@ router
       (err, res) => {
         if (err) return next(err);
 
-        // returns the details of the admin
-        response.json(res.rows);
+        if (res.rows.length === 0) {
+          response.json(`Admin does not exist`);
+        } else {
+          // returns the details of the admin
+          response.json(res.rows);
+        }
       }
     );
   })
@@ -105,48 +73,51 @@ router
         // getting email and password from request body (admins's inputs)
         const { email, password } = request.body;
 
-        // validationResult takes in the request body as an argument and returns an array of errors
-        const errors = validationResult(request);
+        if (!email || !password || email === " " || password === " ") {
+          response.json(`Values missing!`);
+        } else {
+          // validationResult takes in the request body as an argument and returns an array of errors
+          const errors = validationResult(request);
 
-        // check if there are any errors and if there are return the errors in a json response
-        if (!errors.isEmpty()) {
-          return response.status(400).json({
-            errors: errors.array(),
-          });
-        }
+          // check if there are any errors and if there are return the errors in a json response
+          if (!errors.isEmpty()) {
+            return response.status(400).json({
+              errors: errors.array(),
+            });
+          }
 
-        // after inputs passes validation check, I now look to see if the email they inputted already exists
-        pool.query(
-          `SELECT * FROM admin WHERE email=($1)`,
-          [email],
-          async (err, res) => {
-            if (err) return next(err);
+          // after inputs passes validation check, I now look to see if the email they inputted already exists
+          pool.query(
+            `SELECT * FROM admin WHERE email=($1)`,
+            [email],
+            async (err, res) => {
+              if (err) return next(err);
 
-            // if we receive a response that means the email is already in the db
-            if (res.rows.length > 0) {
-              let adminEmail = res.rows[0].email;
+              // if we receive a response that means the email is already in the db
+              if (res.rows.length > 0) {
+                let adminEmail = res.rows[0].email;
 
-              response.json(`${adminEmail} already exists`);
-            } else {
-              // if there is no response that means that the email is not in the db
+                response.json(`${adminEmail} already exists`);
+              } else {
+                // if there is no response that means that the email is not in the db
 
-              // encrypting the password
-              const hashedPassword = await bcrypt.hash(password, 10);
+                // encrypting the password
+                const hashedPassword = await bcrypt.hash(password, 10);
 
-              // once validation is completed and the password gets encrypted, we can now add the admin to the db
-              pool.query(
-                `INSERT INTO admin(email, password) VALUES($1, $2)`,
-                // values takes an array
-                [email, hashedPassword],
+                // once validation is completed and the password gets encrypted, we can now add the admin to the db
+                pool.query(
+                  `INSERT INTO admin(email, password) VALUES($1, $2)`,
+                  // values takes an array
+                  [email, hashedPassword],
 
-                async (err, res) => {
-                  if (err) return next(err);
+                  async (err, res) => {
+                    if (err) return next(err);
 
-                  let welcomeAdminEmail = {
-                    from: "62545a@gmail.com",
-                    to: `${email}`,
-                    subject: `Welcome to RainSA `,
-                    text: `Hello ${email},
+                    let welcomeAdminEmail = {
+                      from: "62545a@gmail.com",
+                      to: `${email}`,
+                      subject: `Welcome to RainSA `,
+                      text: `Hello ${email},
                     
                     You have been successfully added to the Rain Admin database.
 
@@ -158,17 +129,18 @@ router
 
                     Rain Admin
                     `,
-                  };
+                    };
 
-                  // once email is set up you can now send it
-                  const info = await transporter.sendMail(welcomeAdminEmail);
+                    // once email is set up you can now send it
+                    const info = await transporter.sendMail(welcomeAdminEmail);
 
-                  response.status(201).json("Admin added successfully");
-                }
-              );
+                    response.status(201).json("Admin added successfully");
+                  }
+                );
+              }
             }
-          }
-        );
+          );
+        }
       } catch {
         response.status(500).send();
       }
@@ -176,14 +148,6 @@ router
   );
 
 // ******************************************* //
-
-// router.all method to put jwt all requests with this route
-router.all("/departments", authenticateToken, (request, response, next) => {
-  // sets the headers to authorization
-  response.header("Authorization", "Bearer");
-
-  next();
-});
 
 // methods for all /admin/departments routes
 router
@@ -194,7 +158,11 @@ router
     pool.query(`SELECT * FROM departments ORDER BY id DESC`, (err, res) => {
       if (err) return next(err);
 
-      response.json(res.rows);
+      if (res.rows.length === 0) {
+        response.json(`No departments in db`);
+      } else {
+        response.json(res.rows);
+      }
     });
   })
 
@@ -202,48 +170,37 @@ router
   .post((request, response, next) => {
     const { name } = request.body;
 
-    // checking if department exists
-    pool.query(
-      `SELECT * FROM departments WHERE name=($1)`,
-      [name],
-      (err, res) => {
-        if (err) return next(err);
+    if (!name || name === " ") {
+      response.json(`No value inserted`);
+    } else {
+      // checking if department exists
+      pool.query(
+        `SELECT * FROM departments WHERE name=($1)`,
+        [name],
+        (err, res) => {
+          if (err) return next(err);
 
-        if (res.rows.length > 0) {
-          response.json(`Department already exists`);
-        } else {
-          pool.query(
-            `INSERT INTO departments(name) VALUES($1)`,
-            [name],
-            (err, res) => {
-              if (err) return next(err);
+          if (res.rows.length > 0) {
+            response.json(`Department already exists`);
+          } else {
+            pool.query(
+              `INSERT INTO departments(name) VALUES($1)`,
+              [name],
+              (err, res) => {
+                if (err) return next(err);
 
-              response.status(201).json(`Department created successfully`);
-            }
-          );
+                console.log(res.rows);
+
+                response.status(201).json(`Department created successfully`);
+              }
+            );
+          }
         }
-      }
-    );
-  })
-
-  // delete all departments
-  .delete((request, response, next) => {
-    pool.query(`TRUNCATE TABLE departments`, (err, res) => {
-      if (err) return next(err);
-
-      response.json(`Departments table deleted successfully!`);
-    });
+      );
+    }
   });
 
 // ******************************************* //
-
-// router.all method to put jwt all requests with this route
-router.all("/hod", authenticateToken, (request, response, next) => {
-  // sets the headers to authorization
-  response.header("Authorization", "Bearer");
-
-  next();
-});
 
 // methods for all /admin/hod routes
 router
@@ -254,7 +211,11 @@ router
     pool.query(`SELECT * FROM hod ORDER BY id DESC`, (err, res) => {
       if (err) return next(err);
 
-      response.json(res.rows);
+      if (res.rows.length === 0) {
+        response.json(`No Hod in the database`);
+      } else {
+        response.json(res.rows);
+      }
     });
   })
 
@@ -268,63 +229,96 @@ router
         // getting details from request body (hod's inputs)
         const { name, surname, cell, department, email } = request.body;
 
-        // default password for hod
-        let password = "RainRules!";
+        if (
+          !name ||
+          !surname ||
+          !cell ||
+          !department ||
+          !email ||
+          name === " " ||
+          surname === " " ||
+          cell === " " ||
+          department === " " ||
+          email === " "
+        ) {
+          response.json(`Input values missing!`);
+        } else {
+          // generate a new random password every time a hod is added
+          let randomPassword = Math.floor(Math.random() * 123456) + 123456;
+          // default password for hod
+          let password = randomPassword.toString();
 
-        // validationResult takes in the request body as an argument and returns an array of errors
-        const errors = validationResult(request);
+          // validationResult takes in the request body as an argument and returns an array of errors
+          const errors = validationResult(request);
 
-        // check if there are any errors and if there are return the errors in a json response
-        if (!errors.isEmpty()) {
-          return response.status(400).json({
-            errors: errors.array(),
-          });
-        }
+          // check if there are any errors and if there are return the errors in a json response
+          if (!errors.isEmpty()) {
+            return response.status(400).json({
+              errors: errors.array(),
+            });
+          }
 
-        // validation passed, now check if email exists
-        pool.query(
-          `SELECT * FROM hod WHERE email=($1)`,
-          [email],
-          (err, res) => {
-            if (err) return next(err);
+          // validation passed, now check if email exists
+          pool.query(
+            `SELECT * FROM hod WHERE email=($1)`,
+            [email],
+            (err, res) => {
+              if (err) return next(err);
 
-            // if there's a response then it means that the email exists
-            if (res.rows.length > 0) {
-              let hodName = res.rows[0].name;
-              let hodDepartment = res.rows[0].department;
+              // if there's a response then it means that the email exists
+              if (res.rows.length > 0) {
+                let hodName = res.rows[0].name;
+                let hodDepartment = res.rows[0].department;
 
-              response.json(
-                `${hodName} is the Head of ${hodDepartment}, cannot assign more responsibilities!`
-              );
-            } else {
-              // no response means email is available
+                response.json(
+                  `${hodName} is the Head of ${hodDepartment}, cannot assign more responsibilities!`
+                );
+              } else {
+                // no response means email is available
 
-              // now we check if the department entered exists
-              pool.query(
-                `SELECT * FROM departments WHERE name=($1)`,
-                [department],
-                async (err, res) => {
-                  if (err) return next(err);
-                  if (res.rows.length === 0) {
-                    response.json(`${department} department does not exist`);
-                  } else {
-                    // department exists and can now add the hod
+                // now we check if the department entered exists
+                pool.query(
+                  `SELECT * FROM departments WHERE name=($1)`,
+                  [department],
+                  async (err, res) => {
+                    if (err) return next(err);
+                    if (res.rows.length === 0) {
+                      response.json(`${department} department does not exist`);
+                    } else {
+                      pool.query(
+                        `SELECT * FROM hod WHERE department=($1)`,
+                        [department],
+                        async (err, res) => {
+                          if (err) return next(err);
 
-                    // encrypting the password
-                    const hashedPassword = await bcrypt.hash(password, 10);
+                          if (res.rows.length === 0) {
+                            // department exists and is available. can now add the hod
 
-                    // validation and encryption completed
-                    pool.query(
-                      `INSERT INTO hod(name, surname, cell, department, email, password) VALUES($1, $2, $3, $4, $5, $6)`,
-                      [name, surname, cell, department, email, hashedPassword],
-                      async (err, res) => {
-                        if (err) return next(err);
+                            // encrypting the password
+                            const hashedPassword = await bcrypt.hash(
+                              password,
+                              10
+                            );
 
-                        let welcomeHodEmail = {
-                          from: "62545a@gmail.com",
-                          to: `${email}`,
-                          subject: `Welcome to RainSA ${name}`,
-                          text: `Hello ${name},                          
+                            // validation and encryption completed
+                            pool.query(
+                              `INSERT INTO hod(name, surname, cell, department, email, password) VALUES($1, $2, $3, $4, $5, $6)`,
+                              [
+                                name,
+                                surname,
+                                cell,
+                                department,
+                                email,
+                                hashedPassword,
+                              ],
+                              async (err, res) => {
+                                if (err) return next(err);
+
+                                let welcomeHodEmail = {
+                                  from: "62545a@gmail.com",
+                                  to: `${email}`,
+                                  subject: `Welcome to RainSA ${name}`,
+                                  text: `Hello ${name},                          
 
                           You have been successfully added to the Rain Hod database.
 
@@ -338,72 +332,39 @@ router
 
                           Rain Admin                  
                   `,
-                        };
+                                };
 
-                        // once email is set up, it gets sent
-                        const info = await transporter.sendMail(
-                          welcomeHodEmail
-                        );
+                                // once email is set up, it gets sent
+                                const info = await transporter.sendMail(
+                                  welcomeHodEmail
+                                );
 
-                        response.status(201).json(`Hod added successfully`);
-                      }
-                    );
+                                response
+                                  .status(201)
+                                  .json(`Hod added successfully`);
+                              }
+                            );
+                          } else {
+                            response.json(
+                              `Hod already exists in this department`
+                            );
+                          }
+                        }
+                      );
+                    }
                   }
-                }
-              );
+                );
+              }
             }
-          }
-        );
+          );
+        }
       } catch {
         response.status(500).send();
       }
     }
-  )
-
-  // delete all hod
-  .delete((request, response, next) => {
-    pool.query(`TRUNCATE TABLE hod`, (err, res) => {
-      if (err) return next(err);
-
-      response.json(`Hod table deleted successfully!`);
-    });
-  });
+  );
 
 // ******************************************* //
-
-// router.all method to put jwt all requests with this route
-router.all("/view-hod", authenticateToken, (request, response, next) => {
-  // sets the headers to authorization
-  response.header("Authorization", "Bearer");
-
-  next();
-});
-
-// methods for all /admin/view-hod routes
-router
-  .route("/view-hod")
-
-  // view all hod-department
-  .get((request, response, next) => {
-    pool.query(
-      `SELECT name, department FROM hod ORDER BY id DESC`,
-      (err, res) => {
-        if (err) return next(err);
-
-        response.json(res.rows);
-      }
-    );
-  });
-
-// ******************************************* //
-
-// router.all method to put jwt all requests with this route
-router.all("/employees", authenticateToken, (request, response, next) => {
-  // sets the headers to authorization
-  response.header("Authorization", "Bearer");
-
-  next();
-});
 
 // methods for all /admin/employees routes
 router
@@ -413,7 +374,12 @@ router
   .get((request, response, next) => {
     pool.query(`SELECT * FROM employees ORDER BY id DESC`, (err, res) => {
       if (err) return next(err);
-      response.json(res.rows);
+
+      if (res.rows.length === 0) {
+        response.json(`No employees in database`);
+      } else {
+        response.json(res.rows);
+      }
     });
   })
 
@@ -428,90 +394,111 @@ router
         const { name, surname, cell, position, department, hod, email } =
           request.body;
 
-        // default password for employee
-        let password = "makeitrain";
+        if (
+          !name ||
+          !surname ||
+          !cell ||
+          !position ||
+          !department ||
+          !hod ||
+          !email ||
+          name === " " ||
+          surname === " " ||
+          cell === " " ||
+          position === " " ||
+          department === " " ||
+          hod === " " ||
+          email === " "
+        ) {
+          response.json(`Input values missing!`);
+        } else {
+          // generate a new random password every time an employee is added
+          let randomPassword = Math.floor(Math.random() * 123456) + 123456;
 
-        // validationResult takes in the request body as an argument and returns an array of errors
-        const errors = validationResult(request);
+          // default password for employee
+          let password = randomPassword.toString();
 
-        // check if there are any errors and if there are return the errors in a json response
-        if (!errors.isEmpty()) {
-          return response.status(400).json({
-            errors: errors.array(),
-          });
-        }
+          // validationResult takes in the request body as an argument and returns an array of errors
+          const errors = validationResult(request);
 
-        // validation passed, now check if email exists
-        pool.query(
-          `SELECT * FROM employees WHERE email=($1)`,
-          [email],
-          (err, res) => {
-            if (err) return next(err);
+          // check if there are any errors and if there are return the errors in a json response
+          if (!errors.isEmpty()) {
+            return response.status(400).json({
+              errors: errors.array(),
+            });
+          }
 
-            // if there's a response then it means that the email exists
-            if (res.rows.length > 0) {
-              let employeeEmail = res.rows[0].email;
-              let employeeName = res.rows[0].name;
-              let employeeSurname = res.rows[0].surname;
+          // validation passed, now check if email exists
+          pool.query(
+            `SELECT * FROM employees WHERE email=($1)`,
+            [email],
+            (err, res) => {
+              if (err) return next(err);
 
-              response.json(
-                `${employeeName} ${employeeSurname} already has this email address '${employeeEmail}'`
-              );
-            } else {
-              // no response means email is available
+              // if there's a response then it means that the email exists
+              if (res.rows.length > 0) {
+                let employeeEmail = res.rows[0].email;
+                let employeeName = res.rows[0].name;
+                let employeeSurname = res.rows[0].surname;
 
-              // now check if department exist
-              pool.query(
-                `SELECT * FROM departments WHERE name=($1)`,
-                [department],
-                (err, res) => {
-                  if (err) return next(err);
+                response.json(
+                  `${employeeName} ${employeeSurname} already has this email address '${employeeEmail}'`
+                );
+              } else {
+                // no response means email is available
 
-                  if (res.rows.length === 0) {
-                    response.json(`${department} department does not exist`);
-                  } else {
-                    // if the department does exists
+                // now check if department exist
+                pool.query(
+                  `SELECT * FROM departments WHERE name=($1)`,
+                  [department],
+                  (err, res) => {
+                    if (err) return next(err);
 
-                    // now check if the hod exists
+                    if (res.rows.length === 0) {
+                      response.json(`${department} department does not exist`);
+                    } else {
+                      // if the department does exists
 
-                    pool.query(
-                      `SELECT * FROM hod WHERE email=($1)`,
-                      [hod],
-                      async (err, res) => {
-                        if (err) return next(err);
+                      // now check if the hod exists
 
-                        if (res.rows.length === 0) {
-                          response.json(`${hod} is not a Head of Department`);
-                        } else {
-                          // now we can finally add the employee to db
+                      pool.query(
+                        `SELECT * FROM hod WHERE email=($1)`,
+                        [hod],
+                        async (err, res) => {
+                          if (err) return next(err);
 
-                          // encrypting the password
-                          const hashedPassword = await bcrypt.hash(
-                            password,
-                            10
-                          );
+                          if (res.rows.length === 0) {
+                            response.json(`${hod} is not a Head of Department`);
+                          } else {
+                            // now we can finally add the employee to db
 
-                          // validation and encryption completed
-                          pool.query(
-                            `INSERT INTO employees(name, surname, cell, position, department, hod, email, password) VALUES($1, $2, $3, $4, $5, $6, $7, $8)`,
-                            [
-                              name,
-                              surname,
-                              cell,
-                              position,
-                              department,
-                              hod,
-                              email,
-                              hashedPassword,
-                            ],
-                            async (err, res) => {
-                              if (err) return next(err);
+                            // encrypting the password
+                            const hashedPassword = await bcrypt.hash(
+                              password,
+                              10
+                            );
 
-                              let welcomeEmployeeEmail = {
-                                from: "62545a@gmail.com",
-                                to: `${email}`,
-                                subject: `Welcome to RainSA ${name}`,
-                                text: `Hello ${name},                                
+                            // validation and encryption completed
+                            pool.query(
+                              `INSERT INTO employees(name, surname, cell, position, department, hod, email, password) VALUES($1, $2, $3, $4, $5, $6, $7, $8)`,
+                              [
+                                name,
+                                surname,
+                                cell,
+                                position,
+                                department,
+                                hod,
+                                email,
+                                hashedPassword,
+                              ],
+                              async (err, res) => {
+                                if (err) return next(err);
+
+                                let welcomeEmployeeEmail = {
+                                  from: "62545a@gmail.com",
+                                  to: `${email}`,
+                                  subject: `Welcome to RainSA ${name}`,
+                                  text: `Hello ${name},                                
 
                                 You have been successfully added to the Rain Employees database.
                                                               
@@ -525,40 +512,81 @@ router
                                                               
                                 Rain Admin                  
 `,
-                              };
+                                };
 
-                              // once email is set up, it gets sent
-                              const info = await transporter.sendMail(
-                                welcomeEmployeeEmail
-                              );
+                                // once email is set up, it gets sent
+                                const info = await transporter.sendMail(
+                                  welcomeEmployeeEmail
+                                );
 
-                              response
-                                .status(201)
-                                .json(`Employee added successfully`);
-                            }
-                          );
+                                response
+                                  .status(201)
+                                  .json(`Employee added successfully`);
+                              }
+                            );
+                          }
                         }
-                      }
-                    );
+                      );
+                    }
                   }
-                }
-              );
+                );
+              }
             }
-          }
-        );
+          );
+        }
       } catch {
         response.status(500).send();
       }
     }
-  )
+  );
 
-  // delete employees table
-  .delete((request, response, next) => {
-    pool.query(`DROP TABLE IF EXISTS employees`, (err, res) => {
-      if (err) return next(err);
+// ******************************************* //
 
-      response.json(`Employees table deleted successfully!`);
-    });
+// methods for all /admin/view-hod routes
+router
+  //  this method shows all hod and their departments
+  .route("/view-hod")
+
+  // view all hod-department
+  .get((request, response, next) => {
+    pool.query(
+      `SELECT name, department FROM hod ORDER BY id DESC`,
+      (err, res) => {
+        if (err) return next(err);
+
+        if (res.rows.length === 0) {
+          response.json(`No data in db`);
+        } else {
+          response.json(res.rows);
+        }
+      }
+    );
+  });
+
+// ******************************************* //
+
+// methods for all /admin/departments/single-department routes
+router
+  // this route shows employees in the selected department
+  .route("/departments/:department")
+
+  // view all employees in selected department
+  .get((request, response, next) => {
+    const { department } = request.params;
+
+    pool.query(
+      `SELECT name, surname, email FROM employees WHERE department=($1)`,
+      [department],
+      (err, res) => {
+        if (err) return next(err);
+
+        if (res.rows.length === 0) {
+          response.json(`Department does not exist`);
+        } else {
+          response.json(res.rows);
+        }
+      }
+    );
   });
 
 // ******************************************* //
@@ -685,7 +713,7 @@ router
   })
 
   // delete employee
-  .delete(authenticateToken, (request, response, next) => {
+  .delete((request, response, next) => {
     const { email } = request.params;
 
     pool.query(

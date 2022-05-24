@@ -11,8 +11,11 @@ const employee = require("./employee");
 const login = require("./login");
 const forgotPassword = require("./forgotPassword");
 
+// auth access tokens
+const accessTokens = require("../secrets/authToken");
+
 // setting a path and the files use for that paths
-router.use("/admin", admin);
+router.use("/admin", accessTokens.adminToken, admin);
 router.use("/hod", hod);
 router.use("/employee", employee);
 router.use("/login", login);
