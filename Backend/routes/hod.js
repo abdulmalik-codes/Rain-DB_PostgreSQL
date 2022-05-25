@@ -39,105 +39,19 @@ router
         response.json(res.rows);
       }
     );
-  })
+  });
 
-  //   post method to add hod users to the hod table
-  .post(
-    // some middleware to validate check input
-    [
-      check("email", "Please enter a valid email!").isEmail(),
-      check(
-        "password",
-        "Password length should be greater than 5 characters!"
-      ).isLength({ min: 6 }),
-    ],
+// ******************************************* //
 
-    (request, response, next) => {
-      try {
-        // getting details from request body (hod's inputs)
-        const { name, surname, cell, department, email, password } =
-          request.body;
+// methods for all /hod/employees routes
+router
+  .route("/employees")
 
-        // validationResult takes in the request body as an argument and returns an array of errors
-        const errors = validationResult(request);
+  // show all employees
+  .get((request, response, next) => {})
 
-        // check if there are any errors and if there are return the errors in a json response
-        if (!errors.isEmpty()) {
-          return response.status(400).json({
-            errors: errors.array(),
-          });
-        }
-
-        // after inputs passes validation check, I now look to see if the email they inputted already exists
-        pool.query(
-          "SELECT * FROM hod WHERE email=($1)",
-          [email],
-          async (err, res) => {
-            if (err) return next(err);
-
-            // if we receive a response that means the email is already in the db
-            if (res.rows.length > 0) {
-              let hodEmail = res.rows[0].email;
-
-              response.json(`${hodEmail} already exists`);
-            } else {
-              // if there is no response that means that the email is not in the db
-
-              // creating a hashed password
-              const hashedPassword = await bcrypt.hash(password, 10);
-
-              // once validation is completed and the password gets encrypted, we can now add the user to the db
-              pool.query(
-                `INSERT INTO hod(name, surname, cell, department, email, password) VALUES($1, $2, $3, $4, $5, $6)`,
-                [name, surname, cell, department, email, hashedPassword],
-                (err, res) => {
-                  if (err) return next(err);
-
-                  pool.query(
-                    `SELECT * FROM hod WHERE email=($1)`,
-                    [email],
-                    async (err, res) => {
-                      if (err) return next(err);
-
-                      email = res.rows[0].email;
-                      password = res.rows[0].password;
-                      name = res.rows[0].name;
-
-                      let welcomeHodEmail = {
-                        from: "62545a@gmail.com",
-                        to: `${email}`,
-                        subject: `Welcome to RainSA ${name}`,
-                        text: `Hello ${name},
-                        
-                        You have been successfully added to the Rain Hod database.
-
-                        Log into your account with your email: '${email}' and password: '${password}'. 
-                        
-                        Link: https://raindbpsql.netlify.app/
-
-                        Thank you and let it Rain!
-
-                        Rain Admin
-                        `,
-                      };
-                      // once email is set up you can now send it
-                      const info = await transporter.sendMail(welcomeHodEmail);
-
-                      response.json(`Email sent`);
-                    }
-                  );
-                }
-              );
-
-              response.status(201).json("Hod added successfully");
-            }
-          }
-        );
-      } catch {
-        response.status(500).send();
-      }
-    }
-  );
+  // add employee to hod department
+  .post((request, response, next) => {});
 
 // ******************************************* //
 
@@ -261,37 +175,6 @@ router
     } catch {
       response.status(500).send();
     }
-  })
-
-  // delete hod from db
-  .delete(async (request, response, next) => {
-    // pulls email from url path
-    const { email } = request.params;
-
-    // query to delete hod
-    pool.query(`DELETE FROM hod WHERE email=($1)`, [email], (err, res) => {
-      if (err) return next(err);
-
-      response.json(`Hod deleted successfully`);
-    });
-
-    let deletedHod = {
-      from: "62545a@gmail.com",
-      to: `${email}`,
-      subject: `Goodbye from RainSA`,
-      text: `Hello and Goodbye,
-      
-      You have been removed from the Rain Employee database
-      
-      We hope we have parted on good terms and that you'll continue to support RainSA unconditionally
-      
-      Thank you and good luck with your future endeavors
-      
-      Rain Admin`,
-    };
-
-    // email will be sent
-    const info = await transporter.sendMail(deletedHod);
   });
 
 // ******************************************* //

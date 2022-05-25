@@ -1,10 +1,11 @@
--- DROP TABLE admin;
 -- DROP TABLE tasks;
--- DROP TABLE employees;
 -- DROP TABLE hod;
+-- DROP TABLE employees;
+-- DROP TABLE admin;
 -- DROP TABLE departments;
--- DROP TABLE hod_department;
 -- DROP TABLE messages;
+-- *********************
+-- DROP TABLE hod_department;
 
 -- CREATE TABLE IF NOT EXISTS admin(
 --     id SERIAL PRIMARY KEY,
@@ -14,19 +15,7 @@
 
 -- CREATE TABLE IF NOT EXISTS departments(
 --     id SERIAL PRIMARY KEY,
---     department character varying(50) NOT NULL UNIQUE,
---     name character varying(50) NOT NULL
--- );
-
--- CREATE TABLE IF NOT EXISTS hod(
---     id SERIAL PRIMARY KEY,
---     name character varying(50) NOT NULL,
---     surname character varying(50) NOT NULL,
---     cell character varying(10) NOT NULL,
---     department character varying(100) NOT NULL,
---     email character varying(100) NOT NULL UNIQUE,
---     password character varying(200) NOT NULL,
---     FOREIGN KEY(department) REFERENCES departments (department)
+--     department character varying(50) NOT NULL UNIQUE
 -- );
 
 -- CREATE TABLE IF NOT EXISTS employees(
@@ -36,12 +25,25 @@
 --     cell character varying(10) NOT NULL,
 --     position character varying(100) NOT NULL,
 --     department character varying(100) NOT NULL,
---     hod character varying(100) NOT NULL,
+--     joined character varying(100) NOT NULL,
 --     email character varying(100) NOT NULL UNIQUE,
 --     password character varying(100) NOT NULL,
---     FOREIGN KEY(department) REFERENCES departments (department),
---     FOREIGN KEY(hod) REFERENCES hod (email)
+--     FOREIGN KEY(department) REFERENCES departments (department)
 -- );
+
+
+CREATE TABLE IF NOT EXISTS hod(
+    id SERIAL PRIMARY KEY,
+    email character varying(100) NOT NULL,
+    department character varying(100) NOT NULL,
+    admin character varying(100) NOT NULL,
+    promoted character varying(100) NOT NULL,
+    FOREIGN KEY(department) REFERENCES departments (department),
+    FOREIGN KEY(admin) REFERENCES admin (email),
+    FOREIGN KEY(email) REFERENCES employees (email)
+);
+
+
 
 
 -- CREATE TABLE IF NOT EXISTS tasks(

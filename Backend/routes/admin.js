@@ -38,42 +38,39 @@ router
   // get method to show the logged in admin's details
   .get((request, response, next) => {
     // gets the details of the admin logged
-    pool.query(
-      `SELECT * FROM admin WHERE email=($1)`,
-      // gets the email from the object set in the access token
-      [request.admin.email],
-      (err, res) => {
-        if (err) return next(err);
 
-        if (res.rows.length === 0) {
-          response.json(`Admin does not exist`);
-        } else {
-          // returns the details of the admin
-          response.json(res.rows);
+    if (!request.admin) {
+      response.json(`Admin does not Exist!`);
+    } else {
+      pool.query(
+        `SELECT * FROM admin WHERE email=($1)`,
+        // gets the email from the object set in the access token
+        [request.admin.email],
+        (err, res) => {
+          if (err) return next(err);
+
+          if (res.rows.length === 0) {
+            response.json(`Admin does not exist`);
+          } else {
+            // returns the details of the admin
+            response.json(res.rows);
+          }
         }
-      }
-    );
+      );
+    }
   })
 
   // post method to add admins to db
   .post(
     // middleware to validate input
-    [
-      check("email", "Please enter a valid email!").isEmail(),
-      check(
-        "password",
-        "Password length should be greater than 5 characters!"
-      ).isLength({
-        min: 6,
-      }),
-    ],
+    [check("email", "Please enter a valid email!").isEmail()],
 
     (request, response, next) => {
       try {
-        // getting email and password from request body (admins's inputs)
-        const { email, password } = request.body;
+        // getting email from request body (admins's inputs)
+        const { email } = request.body;
 
-        if (!email || !password || email === " " || password === " ") {
+        if (!email || email === " ") {
           response.json(`Values missing!`);
         } else {
           // validationResult takes in the request body as an argument and returns an array of errors
@@ -101,6 +98,21 @@ router
               } else {
                 // if there is no response that means that the email is not in the db
 
+                // generate a random password
+                randomPassword = () => {
+                  let password = "";
+                  let characters = `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&*`;
+
+                  for (let i = 0; i < 6; i++) {
+                    password += characters.charAt(
+                      Math.floor(Math.random() * characters.length)
+                    );
+                  }
+                  return password;
+                };
+                password = randomPassword();
+
+                console.log(password);
                 // encrypting the password
                 const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -168,9 +180,9 @@ router
 
   // add a department
   .post((request, response, next) => {
-    const { department, name } = request.body;
+    const { department } = request.body;
 
-    if (!department || !name || department === " " || name === " ") {
+    if (!department || department === " ") {
       response.json(`No value inserted`);
     } else {
       // checking if department exists
@@ -183,19 +195,15 @@ router
           if (res.rows.length > 0) {
             response.json(`Department already exists`);
           } else {
-            if (department !== name) {
-              response.json(`Input values do not match!`);
-            } else {
-              pool.query(
-                `INSERT INTO departments(department, name) VALUES($1,$2)`,
-                [department, name],
-                (err, res) => {
-                  if (err) return next(err);
+            pool.query(
+              `INSERT INTO departments(department) VALUES($1)`,
+              [department],
+              (err, res) => {
+                if (err) return next(err);
 
-                  response.status(201).json(`Department created successfully`);
-                }
-              );
-            }
+                response.status(201).json(`Department created successfully`);
+              }
+            );
           }
         }
       );
@@ -229,27 +237,18 @@ router
     (request, response, next) => {
       try {
         // getting details from request body (hod's inputs)
-        const { name, surname, cell, department, email } = request.body;
+        const { email, department, admin, promoted } = request.body;
 
         if (
-          !name ||
-          !surname ||
-          !cell ||
-          !department ||
           !email ||
-          name === " " ||
-          surname === " " ||
-          cell === " " ||
+          !department ||
+          !admin ||
+          email === " " ||
           department === " " ||
-          email === " "
+          admin === " "
         ) {
           response.json(`Input values missing!`);
         } else {
-          // generate a new random password every time a hod is added
-          let randomPassword = Math.floor(Math.random() * 123456) + 123456;
-          // default password for hod
-          let password = randomPassword.toString();
-
           // validationResult takes in the request body as an argument and returns an array of errors
           const errors = validationResult(request);
 
@@ -260,27 +259,29 @@ router
             });
           }
 
+          // complete hod add, busy here
+
           // validation passed, now check if email exists
           pool.query(
-            `SELECT * FROM hod WHERE email=($1)`,
+            `SELECT * FROM employees WHERE email=($1)`,
             [email],
             (err, res) => {
               if (err) return next(err);
 
               // if there's a response then it means that the email exists
               if (res.rows.length > 0) {
-                let hodName = res.rows[0].name;
-                let hodDepartment = res.rows[0].department;
+                let accountHolderName = res.rows[0].name;
+                let accountHolderDepartment = res.rows[0].department;
 
                 response.json(
-                  `${hodName} is the Head of ${hodDepartment}, cannot assign more responsibilities!`
+                  `${accountHolderName} from ${accountHolderDepartment} already has this email address`
                 );
               } else {
                 // no response means email is available
 
                 // now we check if the department entered exists
                 pool.query(
-                  `SELECT * FROM departments WHERE name=($1)`,
+                  `SELECT * FROM departments WHERE department=($1)`,
                   [department],
                   async (err, res) => {
                     if (err) return next(err);
@@ -296,31 +297,34 @@ router
                           if (res.rows.length === 0) {
                             // department exists and is available. can now add the hod
 
-                            // encrypting the password
-                            const hashedPassword = await bcrypt.hash(
-                              password,
-                              10
-                            );
+                            // create a function to add date employee was promoted
+                            const d = new Date();
+                            let date = d.toLocaleDateString();
 
-                            // validation and encryption completed
-                            pool.query(
-                              `INSERT INTO hod(name, surname, cell, department, email, password) VALUES($1, $2, $3, $4, $5, $6)`,
-                              [
-                                name,
-                                surname,
-                                cell,
-                                department,
-                                email,
-                                hashedPassword,
-                              ],
-                              async (err, res) => {
-                                if (err) return next(err);
+                            if (request.admin) {
+                              let admin = request.admin.email;
 
-                                let welcomeHodEmail = {
-                                  from: "62545a@gmail.com",
-                                  to: `${email}`,
-                                  subject: `Welcome to RainSA ${name}`,
-                                  text: `Hello ${name},                          
+                              console.log(admin);
+
+                              // busy here check if employee exists first then add to db
+
+                              // validation and encryption completed
+                              pool.query(
+                                `INSERT INTO hod(email, department, admin, promoted) VALUES($1, $2, $3, $4)`,
+                                [
+                                  email,
+                                  department,
+                                  "abdul.malik.codes@gmaila.coma",
+                                  date,
+                                ],
+                                async (err, res) => {
+                                  if (err) return next(err);
+
+                                  let welcomeHodEmail = {
+                                    from: "62545a@gmail.com",
+                                    to: `${email}`,
+                                    subject: `Welcome to RainSA ${name}`,
+                                    text: `Hello ${name},                          
 
                           You have been successfully added to the Rain Hod database.
 
@@ -334,18 +338,21 @@ router
 
                           Rain Admin                  
                   `,
-                                };
+                                  };
 
-                                // once email is set up, it gets sent
-                                const info = await transporter.sendMail(
-                                  welcomeHodEmail
-                                );
+                                  // once email is set up, it gets sent
+                                  const info = await transporter.sendMail(
+                                    welcomeHodEmail
+                                  );
 
-                                response
-                                  .status(201)
-                                  .json(`Hod added successfully`);
-                              }
-                            );
+                                  response
+                                    .status(201)
+                                    .json(`Hod added successfully`);
+                                }
+                              );
+                            } else {
+                              response.json(`No authorization`);
+                            }
                           } else {
                             response.json(
                               `Hod already exists in this department`
@@ -393,7 +400,7 @@ router
     (request, response, next) => {
       try {
         // getting details from request body (employees's inputs)
-        const { name, surname, cell, position, department, hod, email } =
+        const { name, surname, cell, position, department, email } =
           request.body;
 
         if (
@@ -402,24 +409,16 @@ router
           !cell ||
           !position ||
           !department ||
-          !hod ||
           !email ||
           name === " " ||
           surname === " " ||
           cell === " " ||
           position === " " ||
           department === " " ||
-          hod === " " ||
           email === " "
         ) {
           response.json(`Input values missing!`);
         } else {
-          // generate a new random password every time an employee is added
-          let randomPassword = Math.floor(Math.random() * 123456) + 123456;
-
-          // default password for employee
-          let password = randomPassword.toString();
-
           // validationResult takes in the request body as an argument and returns an array of errors
           const errors = validationResult(request);
 
@@ -451,81 +450,84 @@ router
 
                 // now check if department exist
                 pool.query(
-                  `SELECT * FROM departments WHERE name=($1)`,
+                  `SELECT * FROM departments WHERE department=($1)`,
                   [department],
-                  (err, res) => {
+                  async (err, res) => {
                     if (err) return next(err);
 
                     if (res.rows.length === 0) {
                       response.json(`${department} department does not exist`);
                     } else {
-                      // if the department does exists
+                      // the department does exist
 
-                      // now check if the hod exists
+                      // generate a new random password every time an employee is added
+                      randomPassword = () => {
+                        let password = "";
+                        let characters = `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&*`;
 
+                        for (let i = 0; i < 6; i++) {
+                          password += characters.charAt(
+                            Math.floor(Math.random() * characters.length)
+                          );
+                        }
+                        return password;
+                      };
+
+                      // default password for employee
+                      let password = randomPassword();
+
+                      // encrypting the password
+                      const hashedPassword = await bcrypt.hash(password, 10);
+
+                      // validation and encryption completed
+
+                      // create a function to add date account was created
+                      const d = new Date();
+                      let date = d.toLocaleDateString();
+
+                      // now we can finally add the employee to db
                       pool.query(
-                        `SELECT * FROM hod WHERE email=($1)`,
-                        [hod],
+                        `INSERT INTO employees(name, surname, cell, position, department, joined, email, password) VALUES($1, $2, $3, $4, $5, $6, $7, $8)`,
+                        [
+                          name,
+                          surname,
+                          cell,
+                          position,
+                          department,
+                          date,
+                          email,
+                          hashedPassword,
+                        ],
                         async (err, res) => {
                           if (err) return next(err);
 
-                          if (res.rows.length === 0) {
-                            response.json(`${hod} is not a Head of Department`);
-                          } else {
-                            // now we can finally add the employee to db
+                          let welcomeEmployeeEmail = {
+                            from: "62545a@gmail.com",
+                            to: `${email}`,
+                            subject: `Welcome to RainSA ${name}`,
+                            text: `Hello ${name},                                
 
-                            // encrypting the password
-                            const hashedPassword = await bcrypt.hash(
-                              password,
-                              10
-                            );
+                          You have been successfully added to the Rain Employees database.
+                                                        
+                          Log into your account with your email: '${email}' and password: '${password}'.
+                                                        
+                          NB! MAKE SURE TO CHANGE YOUR PASSWORD!!!
+                                                        
+                          link: ${rainUrl}
+                                                        
+                          Thank you and let it Rain!
+                                                        
+                          Rain Admin`,
+                          };
 
-                            // validation and encryption completed
-                            pool.query(
-                              `INSERT INTO employees(name, surname, cell, position, department, hod, email, password) VALUES($1, $2, $3, $4, $5, $6, $7, $8)`,
-                              [
-                                name,
-                                surname,
-                                cell,
-                                position,
-                                department,
-                                hod,
-                                email,
-                                hashedPassword,
-                              ],
-                              async (err, res) => {
-                                if (err) return next(err);
+                          // once email is set up, it gets sent
+                          const info = await transporter.sendMail(
+                            welcomeEmployeeEmail
+                          );
 
-                                let welcomeEmployeeEmail = {
-                                  from: "62545a@gmail.com",
-                                  to: `${email}`,
-                                  subject: `Welcome to RainSA ${name}`,
-                                  text: `Hello ${name},                                
-
-                                You have been successfully added to the Rain Employees database.
-                                                              
-                                Log into your account with your email: '${email}' and password: '${password}'.
-                                                              
-                                NB! MAKE SURE TO CHANGE YOUR PASSWORD!!!
-                                                              
-                                link: ${rainUrl}
-                                                              
-                                Thank you and let it Rain!
-                                                              
-                                Rain Admin`,
-                                };
-
-                                // once email is set up, it gets sent
-                                const info = await transporter.sendMail(
-                                  welcomeEmployeeEmail
-                                );
-
-                                response
-                                  .status(201)
-                                  .json(`Employee added successfully`);
-                              }
-                            );
-                          }
+                          response
+                            .status(201)
+                            .json(`Employee added successfully`);
                         }
                       );
                     }
@@ -598,13 +600,11 @@ router
     const { departmentName } = request.params;
     const { name } = request.body;
 
-    console.log(name);
-
     if (!departmentName) {
       response.json(`No departments`);
     } else {
       pool.query(
-        `SELECT * FROM departments WHERE name=($1)`,
+        `SELECT * FROM departments WHERE department=($1)`,
         [departmentName],
         (err, res) => {
           if (err) return next(err);
@@ -615,7 +615,7 @@ router
             let oldName = res.rows[0].name;
 
             pool.query(
-              `UPDATE departments SET name=($1) WHERE name=($2)`,
+              `UPDATE departments SET department=($1) WHERE department=($2)`,
               [name, oldName],
               (err, res) => {
                 if (err) return next(err);
@@ -660,6 +660,8 @@ router
     try {
       // getting the email from the path
       const { email } = request.params;
+
+      // can select * here then edit (check if exists)
 
       // setting keys for the input
       const keys = ["name", "surname", "cell", "department", "password"];
@@ -780,7 +782,7 @@ router
               subject: `Goodbye from RainSA`,
               text: `Hello and Goodbye,
         
-        You have been removed from the Rain Employee database
+        You have been removed from the Rain Hod database
         
         We hope we have parted on good terms and that you'll continue to support RainSA unconditionally
         
@@ -834,8 +836,6 @@ router
       (err, res) => {
         if (err) return next(err);
 
-        console.log(res.rows);
-
         if (res.rows.length === 0) {
           response.json(`Employee does not exist`);
         } else {
@@ -845,14 +845,19 @@ router
             "cell",
             "position",
             "department",
-            "hod",
             "password",
           ];
           const details = [];
 
           keys.forEach((key) => {
-            if (request.body[key]) details.push(key);
+            if (request.body[key] && request.body[key] !== " ") {
+              details.push(key);
+            }
+          });
 
+          if (details.length === 0) {
+            response.json("No value added to inputs");
+          } else {
             details.forEach((detail) => {
               pool.query(
                 `UPDATE employees SET ${detail}=($1) WHERE email=($2)`,
@@ -862,55 +867,56 @@ router
                 }
               );
             });
-          });
 
-          pool.query(
-            `SELECT * FROM employees WHERE email=($1)`,
-            [email],
-            async (err, res) => {
-              if (err) return next(err);
+            pool.query(
+              `SELECT * FROM employees WHERE email=($1)`,
+              [email],
+              async (err, res) => {
+                if (err) return next(err);
 
-              name = res.rows[0].name;
-              surname = res.rows[0].surname;
-              cell = res.rows[0].cell;
-              position = res.rows[0].position;
-              department = res.rows[0].department;
-              hod = res.rows[0].hod;
+                name = res.rows[0].name;
+                surname = res.rows[0].surname;
+                cell = res.rows[0].cell;
+                position = res.rows[0].position;
+                department = res.rows[0].department;
 
-              password = res.rows[0].password;
-              const hashedPassword = await bcrypt.hash(password, 10);
+                password = res.rows[0].password;
+                const hashedPassword = await bcrypt.hash(password, 10);
 
-              pool.query(
-                `UPDATE employees SET password=($1) WHERE email=($2)`,
-                [hashedPassword, email],
-                async (err, res) => {
-                  if (err) return next(err);
+                pool.query(
+                  `UPDATE employees SET password=($1) WHERE email=($2)`,
+                  [hashedPassword, email],
+                  async (err, res) => {
+                    if (err) return next(err);
 
-                  let updatedEmployeeEmail = {
-                    from: "62545a@gmail.com",
-                    to: `${email}`,
-                    subject: `RainSA - Your details updated successfully!`,
-                    text: `Hello ${name}, 
-                
-                You recently updated your details on your RainEmployee profile.
-                Here are your updated credentials...
-      
-                name: ${name}, surname: ${surname}, cell: ${cell}, position: ${position}, department: ${department}, hod: ${hod}.
-      
-                and to request your password you can click on this link: https://raindbpsql.netlify.app/forgot-password .
-      
-                Thank you and let it Rain!
-      
-                Rain Admin`,
-                  };
+                    let updatedEmployeeEmail = {
+                      from: "62545a@gmail.com",
+                      to: `${email}`,
+                      subject: `RainSA - Your details updated successfully!`,
+                      text: `Hello ${name}, 
+                  
+                  You recently updated your details on your RainEmployee profile.
+                  Here are your updated credentials...
+        
+                  name: ${name}, surname: ${surname}, cell: ${cell}, position: ${position}, department: ${department} .
+        
+                  and to request your password you can click on this link: https://raindbpsql.netlify.app/forgot-password .
+        
+                  Thank you and let it Rain!
+        
+                  Rain Admin`,
+                    };
 
-                  const info = await transporter.sendMail(updatedEmployeeEmail);
+                    const info = await transporter.sendMail(
+                      updatedEmployeeEmail
+                    );
 
-                  response.json("Employee details updated");
-                }
-              );
-            }
-          );
+                    response.json("Employee details updated");
+                  }
+                );
+              }
+            );
+          }
         }
       }
     );

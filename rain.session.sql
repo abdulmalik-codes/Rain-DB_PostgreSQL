@@ -1,14 +1,5 @@
--- DROP TABLE admin
--- CREATE TABLE testT(
---     id serial,
---     test character varying(999)
--- );
-
--- INSERT INTO testT(test) VALUES('test3');
-
-
 -- INSERT INTO admin(email, password)
 -- VALUES
--- ('hr@rain.co.za', 'rainHR');
+-- ('abdul.malik.codes@gmail.com', '123456');
 
 -- select * from testt
