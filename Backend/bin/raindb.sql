@@ -32,16 +32,16 @@
 -- );
 
 
-CREATE TABLE IF NOT EXISTS hod(
-    id SERIAL PRIMARY KEY,
-    email character varying(100) NOT NULL,
-    department character varying(100) NOT NULL,
-    admin character varying(100) NOT NULL,
-    promoted character varying(100) NOT NULL,
-    FOREIGN KEY(department) REFERENCES departments (department),
-    FOREIGN KEY(admin) REFERENCES admin (email),
-    FOREIGN KEY(email) REFERENCES employees (email)
-);
+-- CREATE TABLE IF NOT EXISTS hod(
+--     id SERIAL PRIMARY KEY,
+--     email character varying(100) NOT NULL,
+--     department character varying(100) NOT NULL,
+--     admin character varying(100) NOT NULL,
+--     promoted character varying(100) NOT NULL,
+--     FOREIGN KEY(department) REFERENCES departments (department),
+--     FOREIGN KEY(admin) REFERENCES admin (email),
+--     FOREIGN KEY(email) REFERENCES employees (email)
+-- );
 
 
 

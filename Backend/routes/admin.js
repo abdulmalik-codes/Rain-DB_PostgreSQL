@@ -111,8 +111,6 @@ router
                   return password;
                 };
                 password = randomPassword();
-
-                console.log(password);
                 // encrypting the password
                 const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -237,16 +235,9 @@ router
     (request, response, next) => {
       try {
         // getting details from request body (hod's inputs)
-        const { email, department, admin, promoted } = request.body;
+        const { email, department } = request.body;
 
-        if (
-          !email ||
-          !department ||
-          !admin ||
-          email === " " ||
-          department === " " ||
-          admin === " "
-        ) {
+        if (!email || !department || email === " " || department === " ") {
           response.json(`Input values missing!`);
         } else {
           // validationResult takes in the request body as an argument and returns an array of errors
@@ -259,8 +250,6 @@ router
             });
           }
 
-          // complete hod add, busy here
-
           // validation passed, now check if email exists
           pool.query(
             `SELECT * FROM employees WHERE email=($1)`,
@@ -268,17 +257,11 @@ router
             (err, res) => {
               if (err) return next(err);
 
-              // if there's a response then it means that the email exists
-              if (res.rows.length > 0) {
-                let accountHolderName = res.rows[0].name;
-                let accountHolderDepartment = res.rows[0].department;
+              if (res.rows.length === 0) {
+                // no response means hod cannot be added
 
-                response.json(
-                  `${accountHolderName} from ${accountHolderDepartment} already has this email address`
-                );
+                response.json(`Hod cannot be added if employee does not exist`);
               } else {
-                // no response means email is available
-
                 // now we check if the department entered exists
                 pool.query(
                   `SELECT * FROM departments WHERE department=($1)`,
@@ -295,64 +278,65 @@ router
                           if (err) return next(err);
 
                           if (res.rows.length === 0) {
-                            // department exists and is available. can now add the hod
+                            pool.query(
+                              `SELECT * FROM hod WHERE email=($1)`,
+                              [email],
+                              (err, res) => {
+                                if (err) return next(err);
 
-                            // create a function to add date employee was promoted
-                            const d = new Date();
-                            let date = d.toLocaleDateString();
+                                if (res.rows.length === 0) {
+                                  // department exists and is available. can now add the hod
 
-                            if (request.admin) {
-                              let admin = request.admin.email;
+                                  // create a function to add date employee was promoted
+                                  const d = new Date();
+                                  let date = d.toLocaleDateString();
 
-                              console.log(admin);
+                                  // validation and encryption completed
+                                  pool.query(
+                                    `INSERT INTO hod(email, department, admin, promoted) VALUES($1, $2, $3, $4)`,
+                                    [
+                                      email,
+                                      department,
+                                      request.admin.email,
+                                      date,
+                                    ],
+                                    async (err, res) => {
+                                      if (err) return next(err);
 
-                              // busy here check if employee exists first then add to db
+                                      let welcomeHodEmail = {
+                                        from: "62545a@gmail.com",
+                                        to: `${email}`,
+                                        subject: `Congratulations from RainSA!`,
+                                        text: `Hello ${email},                          
 
-                              // validation and encryption completed
-                              pool.query(
-                                `INSERT INTO hod(email, department, admin, promoted) VALUES($1, $2, $3, $4)`,
-                                [
-                                  email,
-                                  department,
-                                  "abdul.malik.codes@gmaila.coma",
-                                  date,
-                                ],
-                                async (err, res) => {
-                                  if (err) return next(err);
+                        You have been successfully assigned to be the Head of the ${department} department.
 
-                                  let welcomeHodEmail = {
-                                    from: "62545a@gmail.com",
-                                    to: `${email}`,
-                                    subject: `Welcome to RainSA ${name}`,
-                                    text: `Hello ${name},                          
+                        link: ${rainUrl}
 
-                          You have been successfully added to the Rain Hod database.
+                        Thank you and let it Rain!
 
-                          Log into your account with your email: '${email}' and password: '${password}'.
-                  
-                          NB! MAKE SURE TO CHANGE YOUR PASSWORD!!!
+                        Rain Admin                  
+                `,
+                                      };
 
-                          link: ${rainUrl}
+                                      // once email is set up, it gets sent
+                                      const info = await transporter.sendMail(
+                                        welcomeHodEmail
+                                      );
 
-                          Thank you and let it Rain!
-
-                          Rain Admin                  
-                  `,
-                                  };
-
-                                  // once email is set up, it gets sent
-                                  const info = await transporter.sendMail(
-                                    welcomeHodEmail
+                                      response
+                                        .status(201)
+                                        .json(`Hod added successfully`);
+                                    }
                                   );
-
-                                  response
-                                    .status(201)
-                                    .json(`Hod added successfully`);
+                                } else {
+                                  let department = res.rows[0].department;
+                                  response.json(
+                                    `${email} is already Head of the ${department} department`
+                                  );
                                 }
-                              );
-                            } else {
-                              response.json(`No authorization`);
-                            }
+                              }
+                            );
                           } else {
                             response.json(
                               `Hod already exists in this department`
@@ -598,7 +582,7 @@ router
   // edit department
   .put((request, response, next) => {
     const { departmentName } = request.params;
-    const { name } = request.body;
+    const { department } = request.body;
 
     if (!departmentName) {
       response.json(`No departments`);
