@@ -71,7 +71,9 @@ router
         const { email } = request.body;
 
         if (!email || email === " ") {
-          response.json(`Values missing!`);
+          response.json(
+            `Input values missing! Please provide an email to add an Admin!`
+          );
         } else {
           // validationResult takes in the request body as an argument and returns an array of errors
           const errors = validationResult(request);
@@ -111,6 +113,8 @@ router
                   return password;
                 };
                 password = randomPassword();
+
+                console.log(password);
                 // encrypting the password
                 const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -169,7 +173,7 @@ router
       if (err) return next(err);
 
       if (res.rows.length === 0) {
-        response.json(`No departments in db`);
+        response.json(`Departments in database is empty!`);
       } else {
         response.json(res.rows);
       }
@@ -181,7 +185,7 @@ router
     const { department } = request.body;
 
     if (!department || department === " ") {
-      response.json(`No value inserted`);
+      response.json(`No values inserted! Please provide a Department name!`);
     } else {
       // checking if department exists
       pool.query(
@@ -191,7 +195,7 @@ router
           if (err) return next(err);
 
           if (res.rows.length > 0) {
-            response.json(`Department already exists`);
+            response.json(`${department} is already an existing department!`);
           } else {
             pool.query(
               `INSERT INTO departments(department) VALUES($1)`,
@@ -220,7 +224,7 @@ router
       if (err) return next(err);
 
       if (res.rows.length === 0) {
-        response.json(`No Hod in the database`);
+        response.json(`HOD in database is empty!`);
       } else {
         response.json(res.rows);
       }
@@ -238,7 +242,9 @@ router
         const { email, department } = request.body;
 
         if (!email || !department || email === " " || department === " ") {
-          response.json(`Input values missing!`);
+          response.json(
+            `Input values missing! Please provide an email address and a department name! `
+          );
         } else {
           // validationResult takes in the request body as an argument and returns an array of errors
           const errors = validationResult(request);
@@ -259,8 +265,9 @@ router
 
               if (res.rows.length === 0) {
                 // no response means hod cannot be added
-
-                response.json(`Hod cannot be added if employee does not exist`);
+                response.json(
+                  `${email} is not a RainSA employee! Please provide an existing email address!`
+                );
               } else {
                 // now we check if the department entered exists
                 pool.query(
@@ -269,22 +276,37 @@ router
                   async (err, res) => {
                     if (err) return next(err);
                     if (res.rows.length === 0) {
-                      response.json(`${department} department does not exist`);
+                      response.json(`${department} department does not exist!`);
                     } else {
+                      // now check if department has an hod
                       pool.query(
                         `SELECT * FROM hod WHERE department=($1)`,
                         [department],
                         async (err, res) => {
                           if (err) return next(err);
 
-                          if (res.rows.length === 0) {
+                          hodEmail = res.rows[0].email;
+
+                          // if there's a response it means department already has a hod
+                          if (res.rows.length > 0) {
+                            response.json(
+                              ` ${department} department already assigned to ${hodEmail}!`
+                            );
+                          } else {
+                            // no response mean that department needs hod
                             pool.query(
                               `SELECT * FROM hod WHERE email=($1)`,
                               [email],
                               (err, res) => {
                                 if (err) return next(err);
 
-                                if (res.rows.length === 0) {
+                                // check if the employee is already a hod
+                                if (res.rows.length > 0) {
+                                  let department = res.rows[0].department;
+                                  response.json(
+                                    `${email} is already Head of the ${department} department`
+                                  );
+                                } else {
                                   // department exists and is available. can now add the hod
 
                                   // create a function to add date employee was promoted
@@ -309,14 +331,13 @@ router
                                         subject: `Congratulations from RainSA!`,
                                         text: `Hello ${email},                          
 
-                        You have been successfully assigned to be the Head of the ${department} department.
+                                        You have been successfully assigned to be the Head of the ${department} department.
 
-                        link: ${rainUrl}
+                                        link: ${rainUrl}
 
-                        Thank you and let it Rain!
+                                        Thank you and let it Rain!
 
-                        Rain Admin                  
-                `,
+                                        Rain Admin`,
                                       };
 
                                       // once email is set up, it gets sent
@@ -329,17 +350,8 @@ router
                                         .json(`Hod added successfully`);
                                     }
                                   );
-                                } else {
-                                  let department = res.rows[0].department;
-                                  response.json(
-                                    `${email} is already Head of the ${department} department`
-                                  );
                                 }
                               }
-                            );
-                          } else {
-                            response.json(
-                              `Hod already exists in this department`
                             );
                           }
                         }
@@ -369,7 +381,7 @@ router
       if (err) return next(err);
 
       if (res.rows.length === 0) {
-        response.json(`No employees in database`);
+        response.json(`No employees in the RainSA database!`);
       } else {
         response.json(res.rows);
       }
@@ -401,7 +413,9 @@ router
           department === " " ||
           email === " "
         ) {
-          response.json(`Input values missing!`);
+          response.json(
+            `Input values missing! Please make sure to fill in all required fields!`
+          );
         } else {
           // validationResult takes in the request body as an argument and returns an array of errors
           const errors = validationResult(request);
@@ -425,9 +439,10 @@ router
                 let employeeEmail = res.rows[0].email;
                 let employeeName = res.rows[0].name;
                 let employeeSurname = res.rows[0].surname;
+                let employeeDepartment = res.rows[0].department;
 
                 response.json(
-                  `${employeeName} ${employeeSurname} already has this email address '${employeeEmail}'`
+                  `${employeeName} ${employeeSurname} from ${employeeDepartment}, already has this email address: ${employeeEmail} !`
                 );
               } else {
                 // no response means email is available
@@ -440,7 +455,7 @@ router
                     if (err) return next(err);
 
                     if (res.rows.length === 0) {
-                      response.json(`${department} department does not exist`);
+                      response.json(`${department} department does not exist!`);
                     } else {
                       // the department does exist
 
@@ -537,12 +552,12 @@ router
   // view all hod-department
   .get((request, response, next) => {
     pool.query(
-      `SELECT name, department FROM hod ORDER BY id DESC`,
+      `SELECT email, department FROM hod ORDER BY id DESC`,
       (err, res) => {
         if (err) return next(err);
 
         if (res.rows.length === 0) {
-          response.json(`No data in db`);
+          response.json(`No Hod's in the RainSA database!`);
         } else {
           response.json(res.rows);
         }
@@ -564,59 +579,41 @@ router
     const { departmentName } = request.params;
 
     pool.query(
-      `SELECT name, surname, email FROM employees WHERE department=($1)`,
+      `SELECT * FROM departments WHERE department=($1)`,
       [departmentName],
       (err, res) => {
         if (err) return next(err);
 
         if (res.rows.length === 0) {
-          response.json(`No employees in this department`);
+          response.json(`${departmentName} department does not exist!`);
         } else {
-          response.json(res.rows);
+          pool.query(
+            `SELECT name, surname, position, email FROM employees WHERE department=($1)`,
+            [departmentName],
+            (err, res) => {
+              if (err) return next(err);
+
+              if (res.rows.length === 0) {
+                response.json(
+                  `No employees in the ${departmentName} department!`
+                );
+              } else {
+                response.json(res.rows);
+              }
+            }
+          );
         }
       }
     );
   })
 
-  // NOT ABLE TO EDIT OR DELETE TABLES WITH FK CONSTRAINTS
-  // edit department
+  // edit and delete  department
   .put((request, response, next) => {
-    const { departmentName } = request.params;
-    const { department } = request.body;
-
-    if (!departmentName) {
-      response.json(`No departments`);
-    } else {
-      pool.query(
-        `SELECT * FROM departments WHERE department=($1)`,
-        [departmentName],
-        (err, res) => {
-          if (err) return next(err);
-
-          if (res.rows.length === 0) {
-            response.json(`No department`);
-          } else {
-            let oldName = res.rows[0].name;
-
-            pool.query(
-              `UPDATE departments SET department=($1) WHERE department=($2)`,
-              [name, oldName],
-              (err, res) => {
-                if (err) return next(err);
-
-                response.json(`Department updated`);
-              }
-            );
-
-            response.json(res.rows[0].name);
-          }
-        }
-      );
-    }
+    // THIS METHODS WILL NOT WORK!
   })
-
-  // delete department
-  .delete((request, response, next) => {});
+  .delete((request, response, next) => {
+    // NOT ABLE TO EDIT OR DELETE TABLES WITH FK CONSTRAINTS!
+  });
 
 // ******************************************* //
 
@@ -628,15 +625,31 @@ router
   .get((request, response, next) => {
     const { email } = request.params;
 
-    pool.query(`SELECT * FROM hod WHERE email=($1)`, [email], (err, res) => {
-      if (err) return next(err);
+    pool.query(
+      `SELECT * FROM employees WHERE email=($1)`,
+      [email],
+      (err, res) => {
+        if (err) return next(err);
 
-      if (res.rows.length === 0) {
-        response.json(`Hod does not exist`);
-      } else {
-        response.json(res.rows);
+        if (res.rows.length === 0) {
+          response.json(`${email} is not a RainSA employee!`);
+        } else {
+          pool.query(
+            `SELECT * FROM hod WHERE email=($1)`,
+            [email],
+            (err, res) => {
+              if (err) return next(err);
+
+              if (res.rows.length === 0) {
+                response.json(`${email} has not been assigned as Hod!`);
+              } else {
+                response.json(res.rows);
+              }
+            }
+          );
+        }
       }
-    });
+    );
   })
 
   // edit hod
@@ -644,97 +657,112 @@ router
     try {
       // getting the email from the path
       const { email } = request.params;
+      let { department } = request.body;
 
-      // can select * here then edit (check if exists)
-
-      // setting keys for the input
-      const keys = ["name", "surname", "cell", "department", "password"];
-
-      // an array to store all the details
-      const details = [];
-
-      // if there is a value in the key that needs to be updated this method takes care of it
-      keys.forEach((key) => {
-        // store the keys in the details array if there are any
-        if (request.body[key]) details.push(key);
-
-        // for each detail, update its value
-        details.forEach((detail) => {
-          pool.query(
-            `UPDATE hod SET ${detail}=($1) WHERE email=($2)`,
-
-            // get the value of detail from the request body
-            [request.body[detail], email],
-
-            (err, res) => {
-              if (err) return next(err);
-            }
-          );
-        });
-      });
-
-      // getting the updated password from the table and encrypting it again
       pool.query(
-        `SELECT password FROM hod WHERE email=($1)`,
+        `SELECT * FROM employees WHERE email=($1)`,
         [email],
-        async (err, res) => {
+        (err, res) => {
           if (err) return next(err);
 
-          // password from the response
-          const hodPassword = res.rows[0].password;
+          if (res.rows.length === 0) {
+            response.json(`${email} is not a RainSA employee!`);
+          } else {
+            pool.query(
+              `SELECT * FROM hod WHERE email=($1)`,
+              [email],
+              (err, res) => {
+                if (err) return next(err);
 
-          // encrypting the password
-          const hashedPassword = await bcrypt.hash(hodPassword, 10);
+                if (res.rows.length === 0) {
+                  response.json(`${email} has not been assigned as Hod!`);
+                } else {
+                  pool.query(
+                    `SELECT * FROM departments WHERE department=($1)`,
+                    [department],
+                    (err, res) => {
+                      if (err) return next(err);
 
-          pool.query(
-            `UPDATE hod SET password=($1) WHERE email=($2)`,
-            [hashedPassword, email],
-            (err, res) => {
-              if (err) return next(err);
-            }
-          );
-        }
-      );
+                      if (res.rows.length === 0) {
+                        response.json(
+                          `${department} is not a RainSA department!`
+                        );
+                      } else {
+                        pool.query(
+                          `SELECT * FROM hod WHERE department=($1)`,
+                          [department],
+                          (err, res) => {
+                            if (err) return next(err);
+                            if (res.rows.length > 0) {
+                              hodEmail = res.rows[0].email;
+                              response.json(
+                                `${department} department already assigned to ${hodEmail}!`
+                              );
+                            } else {
+                              // department available
+                              // hod can be promoted to new department
 
-      // after all details are updated we can now notify the account holder with an email
+                              // create a function to add the date hod was promoted again
+                              const d = new Date();
+                              let date = d.toLocaleDateString();
 
-      // first we get all the details
-      pool.query(
-        `SELECT * FROM hod WHERE email=($1)`,
-        [email],
-        async (err, res) => {
-          if (err) return next(err);
+                              // update query
+                              pool.query(
+                                `UPDATE hod SET department=($1), admin=($2), promoted=($3) WHERE email=($4)`,
+                                [department, request.admin.email, date, email],
+                                (err, res) => {
+                                  if (err) return next(err);
 
-          // getting the hod details
-          name = res.rows[0].name;
-          surname = res.rows[0].surname;
-          cell = res.rows[0].cell;
-          department = res.rows[0].department;
-          password = res.rows[0].password;
+                                  // after all details are updated we can now notify the account holder with an email
 
-          // object that hold email details that needs to be sent
-          let updateHodEmail = {
-            from: "62545a@gmail.com",
-            to: `${email}`,
-            subject: `RainSA - Your details updated successfully!`,
-            text: `Hello ${name},
+                                  // first we get all the details
+                                  pool.query(
+                                    `SELECT * FROM hod WHERE email=($1)`,
+                                    [email],
+                                    async (err, res) => {
+                                      if (err) return next(err);
+
+                                      // getting the hod details
+                                      department = res.rows[0].department;
+
+                                      // object that hold email details that needs to be sent
+                                      let updateHodEmail = {
+                                        from: "62545a@gmail.com",
+                                        to: `${email}`,
+                                        subject: `Congratulations from RainSA!`,
+                                        text: `Hello,
             
-            you recently updated your details on your RainEmployee profile. 
-            Here are your updated credentials...
-            name: ${name}, surname: ${surname}, cell: ${cell}, department: ${department}.
+                                        You have been assigned as Head of the ${department} department.
 
-            and to request your password you can click on this link: https://raindbpsql.netlify.app/forgot-password .
+                                        Good luck on your new journey.
 
-            Thank you and let it Rain!
+                                        Thank you and let it Rain!
 
-            Rain Admin            
-            `,
-          };
+                                        Rain Admin`,
+                                      };
 
-          // once email is set up you can now send it
-          const info = await transporter.sendMail(updateHodEmail);
+                                      // once email is set up you can now send it
+                                      const info = await transporter.sendMail(
+                                        updateHodEmail
+                                      );
 
-          response.json(`Hod updated and email sent`);
+                                      response.json(
+                                        `Hod's details validated, encrypted, updated, and sent via email!`
+                                      );
+                                    }
+                                  );
+                                }
+                              );
+                            }
+                          }
+                        );
+                      }
+                    }
+                  );
+                }
+              }
+            );
+          }
         }
       );
     } catch {
@@ -747,42 +775,85 @@ router
     // pulls email from url path
     const { email } = request.params;
 
-    pool.query(`SELECT * FROM hod WHERE email=($1)`, [email], (err, res) => {
-      if (err) return next(err);
+    pool.query(
+      `SELECT * FROM employees WHERE email=($1)`,
+      [email],
+      (err, res) => {
+        if (err) return next(err);
 
-      if (res.rows.length === 0) {
-        response.json(`Hod does not exist`);
-      } else {
-        // query to delete hod
-        pool.query(
-          `DELETE FROM hod WHERE email=($1)`,
-          [email],
-          async (err, res) => {
-            if (err) return next(err);
+        if (res.rows.length === 0) {
+          response.json(`${email} is not a RainSA employee!`);
+        } else {
+          pool.query(
+            `SELECT * FROM hod WHERE email=($1)`,
+            [email],
+            (err, res) => {
+              if (err) return next(err);
 
-            let deletedHod = {
-              from: "62545a@gmail.com",
-              to: `${email}`,
-              subject: `Goodbye from RainSA`,
-              text: `Hello and Goodbye,
-        
-        You have been removed from the Rain Hod database
-        
-        We hope we have parted on good terms and that you'll continue to support RainSA unconditionally
-        
-        Thank you and good luck with your future endeavors
-        
-        Rain Admin`,
-            };
+              if (res.rows.length === 0) {
+                response.json(`${email} has not been assigned as Hod!`);
+              } else {
+                let adminEmail = request.admin.email;
+                pool.query(
+                  `SELECT * FROM admin WHERE email=($1)`,
+                  [adminEmail],
+                  async (err, res) => {
+                    if (err) return next(err);
 
-            // email will be sent
-            const info = await transporter.sendMail(deletedHod);
+                    if (res.rows.length === 0) {
+                      response.json(`Admin does not exist!`);
+                    } else {
+                      let adminPassword = res.rows[0].password;
+                      let passwordEntered = request.body.password;
 
-            response.json(`Hod deleted successfully`);
-          }
-        );
+                      const comparedPassword = await bcrypt.compare(
+                        passwordEntered,
+                        adminPassword
+                      );
+
+                      if (!comparedPassword) {
+                        response.json(`Password Invalid!`);
+                      } else {
+                        // query to delete hod
+                        pool.query(
+                          `DELETE FROM hod WHERE email=($1)`,
+                          [email],
+                          async (err, res) => {
+                            if (err) return next(err);
+
+                            let deletedHodEmail = {
+                              from: "62545a@gmail.com",
+                              to: `${email}`,
+                              subject: `Goodbye from RainSA`,
+                              text: `Hello and Goodbye,
+              
+              You have been removed from the Rain Hod database
+              
+              We hope we have parted on good terms and that you'll continue to support RainSA unconditionally
+              
+              Thank you and good luck with your future endeavors
+              
+              Rain Admin`,
+                            };
+
+                            // email will be sent
+                            const info = await transporter.sendMail(
+                              deletedHodEmail
+                            );
+
+                            response.json(`${email} has been demoted!`);
+                          }
+                        );
+                      }
+                    }
+                  }
+                );
+              }
+            }
+          );
+        }
       }
-    });
+    );
   });
 
 // ******************************************* //
@@ -802,7 +873,7 @@ router
         if (err) return next(err);
 
         if (res.rows.length === 0) {
-          response.json(`Employee not in db`);
+          response.json(`${email} is not a RainSA employee!`);
         } else {
           response.json(res.rows);
         }
@@ -821,7 +892,7 @@ router
         if (err) return next(err);
 
         if (res.rows.length === 0) {
-          response.json(`Employee does not exist`);
+          response.json(`${email} is not a RainSA employee!`);
         } else {
           const keys = [
             "name",
@@ -840,7 +911,9 @@ router
           });
 
           if (details.length === 0) {
-            response.json("No value added to inputs");
+            response.json(
+              `Input values missing! Please insert into all required fields!`
+            );
           } else {
             details.forEach((detail) => {
               pool.query(
@@ -895,7 +968,7 @@ router
                       updatedEmployeeEmail
                     );
 
-                    response.json("Employee details updated");
+                    response.json(`${email}'s details updated successfully!`);
                   }
                 );
               }
@@ -917,7 +990,7 @@ router
         if (err) return next(err);
 
         if (res.rows.length === 0) {
-          response.json(`Employee does not exist`);
+          response.json(`${email} is not a RainSA employee!`);
         } else {
           // employee exists
           let adminEmail = request.admin.email;
@@ -928,7 +1001,7 @@ router
               if (err) return next(err);
 
               if (res.rows.length === 0) {
-                response.json(`Admin does not exist`);
+                response.json(`Admin does not exist!`);
               } else {
                 let adminPassword = res.rows[0].password;
                 let passwordEntered = request.body.password;
@@ -939,7 +1012,7 @@ router
                 );
 
                 if (!comparedPassword) {
-                  response.json(`Password is invalid`);
+                  response.json(`Invalid Password!`);
                 } else {
                   pool.query(
                     `DELETE FROM employees WHERE email=($1)`,
@@ -956,7 +1029,7 @@ router
 
                       const info = await transporter.sendMail(deletedEmployee);
 
-                      response.json(`Employee removed from database`);
+                      response.json(`${email} has been removed successfully!`);
                     }
                   );
                 }
@@ -1000,14 +1073,14 @@ router
         if (err) return next(err);
 
         if (res.rows.length === 0) {
-          response.json(`Admin does not exist`);
+          response.json(`Admin does not exist!`);
         } else {
           try {
             const { password } = request.body;
             const hashedPassword = await bcrypt.hash(password, 10);
 
             if (!password || password === " ") {
-              response.json(`No password entered`);
+              response.json(`Input values missing! Please insert password!`);
             } else {
               pool.query(
                 `UPDATE admin SET password=($1) WHERE email=($2)`,
@@ -1032,7 +1105,7 @@ router
                   // once email is set up you can now send it
                   const info = await transporter.sendMail(updateAdminEmail);
 
-                  response.json(`${email} password updated`);
+                  response.json(`${email} password updated!`);
                 }
               );
             }
@@ -1052,7 +1125,7 @@ router
       if (err) return next(err);
 
       if (res.rows.length === 0) {
-        response.json(`${email} does not exist`);
+        response.json(`${email} does not exist!`);
       } else {
         pool.query(
           `SELECT password from admin WHERE email=($1)`,
@@ -1068,11 +1141,11 @@ router
             );
 
             if (!comparedPassword) {
-              response.json(`Password entered is invalid`);
+              response.json(`Password entered is invalid!`);
             } else {
               // if the passwords match the admin can be deleted
               pool.query(
-                "DELETE FROM admin WHERE email=($1)",
+                `DELETE FROM admin WHERE email=($1)`,
                 [email],
                 async (err, res) => {
                   if (err) return next(err);
@@ -1087,7 +1160,7 @@ router
 
                   const info = await transporter.sendMail(deletedAdmin);
 
-                  response.json(`Admin removed from Database`);
+                  response.json(`${email} successfully removed from Database!`);
                 }
               );
             }
