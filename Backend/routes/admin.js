@@ -285,10 +285,9 @@ router
                         async (err, res) => {
                           if (err) return next(err);
 
-                          hodEmail = res.rows[0].email;
-
                           // if there's a response it means department already has a hod
                           if (res.rows.length > 0) {
+                            hodEmail = res.rows[0].email;
                             response.json(
                               ` ${department} department already assigned to ${hodEmail}!`
                             );
@@ -339,6 +338,11 @@ router
 
                                         Rain Admin`,
                                       };
+
+                                      pool.query(
+                                        `UPDATE employees SET position=($1) WHERE email=($2)`,
+                                        [`Head of ${department}`, email]
+                                      );
 
                                       // once email is set up, it gets sent
                                       const info = await transporter.sendMail(
@@ -474,6 +478,8 @@ router
 
                       // default password for employee
                       let password = randomPassword();
+
+                      console.log(password);
 
                       // encrypting the password
                       const hashedPassword = await bcrypt.hash(password, 10);

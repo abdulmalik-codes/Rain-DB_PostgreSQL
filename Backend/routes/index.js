@@ -16,8 +16,8 @@ const accessTokens = require("../secrets/authToken");
 
 // setting a path and the files use for that paths
 router.use("/admin", accessTokens.adminToken, admin);
-router.use("/hod", hod);
-router.use("/employee", employee);
+router.use("/hod", accessTokens.hodToken, hod);
+router.use("/employee", accessTokens.employeeToken, employee);
 router.use("/login", login);
 router.use("/forgot-password", forgotPassword);
 

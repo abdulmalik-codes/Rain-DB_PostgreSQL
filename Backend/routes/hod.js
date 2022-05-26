@@ -1,44 +1,36 @@
-// modules imported
-
-// router module from express to create routes in a separate folder/file
 const { Router } = require("express");
-// creating a router variable to call the router function
 const router = Router();
 
-// bcrypt to encrypt passwords
 const bcrypt = require("bcrypt");
-
-// validation to check if input meets requirements
 const { check, validationResult } = require("express-validator");
 
-// import configured files
-
-// connection to postgres
 const pool = require("../configured/index");
-
-// connection to email service
 const transporter = require("../configured/email");
 
 // ******************************************* //
 
-// methods for all /hod routes
 router
   .route("/")
 
-  // get method to show the logged in hod's details
   .get((request, response, next) => {
-    // gets the details of the hod logged
-    pool.query(
-      "SELECT * FROM hod WHERE email=($1)",
-      // gets the email from the object set in the access token
-      [request.hod.email],
-      (err, res) => {
-        if (err) return next(err);
+    const email = request.hod.email;
+    pool.query("SELECT * FROM hod WHERE email=($1)", [email], (err, res) => {
+      if (err) return next(err);
 
-        // returns the details of the hod
-        response.json(res.rows);
+      if (res.rows.length === 0) {
+        response.json(`Hod not assigned!`);
+      } else {
+        pool.query(
+          `SELECT * FROM employees WHERE email=($1)`,
+          [email],
+          (err, res) => {
+            if (err) return next(err);
+
+            response.json(res.rows);
+          }
+        );
       }
-    );
+    });
   });
 
 // ******************************************* //
