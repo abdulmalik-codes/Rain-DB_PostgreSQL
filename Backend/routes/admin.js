@@ -113,8 +113,6 @@ router
                   return password;
                 };
                 password = randomPassword();
-
-                console.log(password);
                 // encrypting the password
                 const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -308,27 +306,38 @@ router
                                 } else {
                                   // department exists and is available. can now add the hod
 
-                                  // create a function to add date employee was promoted
-                                  const d = new Date();
-                                  let date = d.toLocaleDateString();
-
-                                  // validation and encryption completed
                                   pool.query(
-                                    `INSERT INTO hod(email, department, admin, promoted) VALUES($1, $2, $3, $4)`,
-                                    [
-                                      email,
-                                      department,
-                                      request.admin.email,
-                                      date,
-                                    ],
-                                    async (err, res) => {
+                                    `SELECT * FROM admin WHERE email=($1)`,
+                                    [request.admin.email],
+                                    (err, res) => {
                                       if (err) return next(err);
 
-                                      let welcomeHodEmail = {
-                                        from: "62545a@gmail.com",
-                                        to: `${email}`,
-                                        subject: `Congratulations from RainSA!`,
-                                        text: `Hello ${email},                          
+                                      if (res.rows.length === 0) {
+                                        response.json(
+                                          `Cannot add Hod because Admin does not exist!`
+                                        );
+                                      } else {
+                                        // create a function to add date employee was promoted
+                                        const d = new Date();
+                                        let date = d.toLocaleDateString();
+
+                                        // validation and encryption completed
+                                        pool.query(
+                                          `INSERT INTO hod(email, department, admin, promoted) VALUES($1, $2, $3, $4)`,
+                                          [
+                                            email,
+                                            department,
+                                            request.admin.email,
+                                            date,
+                                          ],
+                                          async (err, res) => {
+                                            if (err) return next(err);
+
+                                            let welcomeHodEmail = {
+                                              from: "62545a@gmail.com",
+                                              to: `${email}`,
+                                              subject: `Congratulations from RainSA!`,
+                                              text: `Hello ${email},                          
 
                                         You have been successfully assigned to be the Head of the ${department} department.
 
@@ -337,21 +346,29 @@ router
                                         Thank you and let it Rain!
 
                                         Rain Admin`,
-                                      };
+                                            };
 
-                                      pool.query(
-                                        `UPDATE employees SET position=($1) WHERE email=($2)`,
-                                        [`Head of ${department}`, email]
-                                      );
+                                            pool.query(
+                                              `UPDATE employees SET position=($1), department=($2) WHERE email=($3)`,
+                                              [
+                                                `Head of ${department}`,
+                                                `${department}`,
+                                                email,
+                                              ]
+                                            );
 
-                                      // once email is set up, it gets sent
-                                      const info = await transporter.sendMail(
-                                        welcomeHodEmail
-                                      );
+                                            // once email is set up, it gets sent
+                                            const info =
+                                              await transporter.sendMail(
+                                                welcomeHodEmail
+                                              );
 
-                                      response
-                                        .status(201)
-                                        .json(`Hod added successfully`);
+                                            response
+                                              .status(201)
+                                              .json(`Hod added successfully`);
+                                          }
+                                        );
+                                      }
                                     }
                                   );
                                 }
@@ -478,8 +495,6 @@ router
 
                       // default password for employee
                       let password = randomPassword();
-
-                      console.log(password);
 
                       // encrypting the password
                       const hashedPassword = await bcrypt.hash(password, 10);
@@ -708,55 +723,85 @@ router
                               // department available
                               // hod can be promoted to new department
 
-                              // create a function to add the date hod was promoted again
-                              const d = new Date();
-                              let date = d.toLocaleDateString();
-
-                              // update query
+                              // checks if the token is authentic
                               pool.query(
-                                `UPDATE hod SET department=($1), admin=($2), promoted=($3) WHERE email=($4)`,
-                                [department, request.admin.email, date, email],
+                                `SELECT * FROM admin WHERE email=($1)`,
+                                [request.admin.email],
                                 (err, res) => {
                                   if (err) return next(err);
 
-                                  // after all details are updated we can now notify the account holder with an email
+                                  if (res.rows.length === 0) {
+                                    response.json(
+                                      `Admin account does not exist!`
+                                    );
+                                  } else {
+                                    // create a function to add the date hod was promoted again
+                                    const d = new Date();
+                                    let date = d.toLocaleDateString();
 
-                                  // first we get all the details
-                                  pool.query(
-                                    `SELECT * FROM hod WHERE email=($1)`,
-                                    [email],
-                                    async (err, res) => {
-                                      if (err) return next(err);
+                                    // update query
+                                    pool.query(
+                                      `UPDATE hod SET department=($1), admin=($2), promoted=($3) WHERE email=($4)`,
+                                      [
+                                        department,
+                                        request.admin.email,
+                                        date,
+                                        email,
+                                      ],
+                                      (err, res) => {
+                                        if (err) return next(err);
 
-                                      // getting the hod details
-                                      department = res.rows[0].department;
+                                        // after all details are updated we can now notify the account holder with an email
 
-                                      // object that hold email details that needs to be sent
-                                      let updateHodEmail = {
-                                        from: "62545a@gmail.com",
-                                        to: `${email}`,
-                                        subject: `Congratulations from RainSA!`,
-                                        text: `Hello,
+                                        // first we get all the details
+                                        pool.query(
+                                          `SELECT * FROM hod WHERE email=($1)`,
+                                          [email],
+                                          async (err, res) => {
+                                            if (err) return next(err);
+
+                                            // getting the hod details
+                                            department = res.rows[0].department;
+
+                                            // object that hold email details that needs to be sent
+                                            let updateHodEmail = {
+                                              from: "62545a@gmail.com",
+                                              to: `${email}`,
+                                              subject: `Congratulations from RainSA!`,
+                                              text: `Hello,
             
-                                        You have been assigned as Head of the ${department} department.
+                                              You have been re-assigned as Head of the ${department} department.
+                                                  
+                                              Good luck on your new journey.
+                                                  
+                                              Thank you and let it Rain!
+                                                  
+                                              Rain Admin`,
+                                            };
 
-                                        Good luck on your new journey.
+                                            pool.query(
+                                              `UPDATE employees SET position=($1), department=($2) WHERE email=($3)`,
+                                              [
+                                                `Head of ${department}`,
+                                                `${department}`,
+                                                email,
+                                              ]
+                                            );
 
-                                        Thank you and let it Rain!
+                                            // once email is set up you can now send it
+                                            const info =
+                                              await transporter.sendMail(
+                                                updateHodEmail
+                                              );
 
-                                        Rain Admin`,
-                                      };
-
-                                      // once email is set up you can now send it
-                                      const info = await transporter.sendMail(
-                                        updateHodEmail
-                                      );
-
-                                      response.json(
-                                        `Hod's details validated, encrypted, updated, and sent via email!`
-                                      );
-                                    }
-                                  );
+                                            response.json(
+                                              `Hod's details validated, encrypted, updated, and sent via email!`
+                                            );
+                                          }
+                                        );
+                                      }
+                                    );
+                                  }
                                 }
                               );
                             }
@@ -800,6 +845,7 @@ router
                 response.json(`${email} has not been assigned as Hod!`);
               } else {
                 let adminEmail = request.admin.email;
+                let department = res.rows[0].department;
                 pool.query(
                   `SELECT * FROM admin WHERE email=($1)`,
                   [adminEmail],
@@ -833,14 +879,19 @@ router
                               subject: `Goodbye from RainSA`,
                               text: `Hello and Goodbye,
               
-              You have been removed from the Rain Hod database
-              
-              We hope we have parted on good terms and that you'll continue to support RainSA unconditionally
-              
-              Thank you and good luck with your future endeavors
-              
-              Rain Admin`,
+                              You have been removed from the Rain Hod database
+
+                              We hope we have parted on good terms and that you'll continue to support RainSA unconditionally
+
+                              Thank you and good luck with your future endeavors
+
+                              Rain Admin`,
                             };
+
+                            pool.query(
+                              `UPDATE employees SET position=($1) WHERE email=($2)`,
+                              [`Part of ${department}`, email]
+                            );
 
                             // email will be sent
                             const info = await transporter.sendMail(
@@ -958,7 +1009,7 @@ router
                       subject: `RainSA - Your details updated successfully!`,
                       text: `Hello ${name}, 
                   
-                  You recently updated your details on your RainEmployee profile.
+                  Your details on your Rain Employee profile was recently updated by the Rain Admin team.
                   Here are your updated credentials...
         
                   name: ${name}, surname: ${surname}, cell: ${cell}, position: ${position}, department: ${department} .
@@ -1101,6 +1152,8 @@ router
                     text: `Hello ${email},
                       
                       Your password has been successfully updated. 
+
+                      Did not request this? Navigate to forgot password and request a password reset ${rainUrl} .
   
                       Thank you and let it Rain!
   
