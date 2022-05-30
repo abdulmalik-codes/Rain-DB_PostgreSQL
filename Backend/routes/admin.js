@@ -496,6 +496,8 @@ router
                       // default password for employee
                       let password = randomPassword();
 
+                      console.log(password);
+
                       // encrypting the password
                       const hashedPassword = await bcrypt.hash(password, 10);
 

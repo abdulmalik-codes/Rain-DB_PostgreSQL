@@ -1,4 +1,4 @@
-const { Router, response, request } = require("express");
+const { Router } = require("express");
 const router = Router();
 
 const bcrypt = require("bcrypt");
@@ -17,7 +17,7 @@ router
   // logged in hod
   .get((request, response, next) => {
     const email = request.hod.email;
-    pool.query("SELECT * FROM hod WHERE email=($1)", [email], (err, res) => {
+    pool.query(`SELECT * FROM hod WHERE email=($1)`, [email], (err, res) => {
       if (err) return next(err);
 
       if (res.rows.length === 0) {
@@ -340,37 +340,6 @@ router
 
 // ******************************************* //
 
-// selects hod from 'view-hod' and shows all employees in that department
-router.route("/:email").get((request, response, next) => {
-  const { email } = request.params;
-
-  pool.query(`SELECT * FROM hod WHERE email=($1)`, [email], (err, res) => {
-    if (err) return next(err);
-
-    if (res.rows.length === 0) {
-      response.json(`No Hod!`);
-    } else {
-      hodDepartment = res.rows[0].department;
-
-      pool.query(
-        `SELECT * FROM employees WHERE department=($1)`,
-        [hodDepartment],
-        (err, res) => {
-          if (err) return next(err);
-
-          if (res.rows.length === 0) {
-            response.json(`No Department!`);
-          } else {
-            response.json(res.rows);
-          }
-        }
-      );
-    }
-  });
-});
-
-// ******************************************* //
-
 router
   .route("/employees/:email")
   .get((request, response, next) => {
@@ -390,6 +359,7 @@ router
       }
     );
   })
+  // should only edit own employees, get from delete
   .put((request, response, next) => {
     const hodEmail = request.hod.email;
     const { email } = request.params;
@@ -528,53 +498,75 @@ router
           response.json(`${email} is not a RainSA employee!`);
         } else {
           // employee exists
+          let employeeDepartment = res.rows[0].department;
           let hodEmail = request.hod.email;
+
           pool.query(
-            `SELECT password FROM employees WHERE email=($1)`,
+            `SELECT department from employees WHERE email=($1)`,
             [hodEmail],
-            async (err, res) => {
+            (err, res) => {
               if (err) return next(err);
 
               if (res.rows.length === 0) {
-                response.json(`Hod does not exist!`);
+                response.json(`No response!`);
               } else {
-                if (request.body.password) {
-                  let hodPassword = res.rows[0].password;
-                  let passwordEntered = request.body.password;
+                hodDepartment = res.rows[0].department;
 
-                  const comparedPassword = await bcrypt.compare(
-                    passwordEntered,
-                    hodPassword
+                if (employeeDepartment !== hodDepartment) {
+                  response.json(
+                    `Head of ${hodDepartment} cannot remove employee from ${employeeDepartment}`
                   );
-
-                  if (!comparedPassword) {
-                    response.json(`Invalid Password!`);
-                  } else {
-                    pool.query(
-                      `DELETE FROM employees WHERE email=($1)`,
-                      [email],
-                      async (err, res) => {
-                        if (err) return next(err);
-
-                        let deletedEmployee = {
-                          from: "62545a@gmail.com",
-                          to: `${email}`,
-                          subject: `Goodbye from RainSA  ${email}`,
-                          text: `You have been removed from the Rain Employees Database`,
-                        };
-
-                        const info = await transporter.sendMail(
-                          deletedEmployee
-                        );
-
-                        response.json(
-                          `${email} has been removed successfully!`
-                        );
-                      }
-                    );
-                  }
                 } else {
-                  response.json(`No password Entered!`);
+                  pool.query(
+                    `SELECT password FROM employees WHERE email=($1)`,
+                    [hodEmail],
+                    async (err, res) => {
+                      if (err) return next(err);
+
+                      if (res.rows.length === 0) {
+                        response.json(`Hod does not exist!`);
+                      } else {
+                        if (request.body.password) {
+                          let hodPassword = res.rows[0].password;
+                          let passwordEntered = request.body.password;
+
+                          const comparedPassword = await bcrypt.compare(
+                            passwordEntered,
+                            hodPassword
+                          );
+
+                          if (!comparedPassword) {
+                            response.json(`Invalid Password!`);
+                          } else {
+                            pool.query(
+                              `DELETE FROM employees WHERE email=($1)`,
+                              [email],
+                              async (err, res) => {
+                                if (err) return next(err);
+
+                                let deletedEmployee = {
+                                  from: "62545a@gmail.com",
+                                  to: `${email}`,
+                                  subject: `Goodbye from RainSA  ${email}`,
+                                  text: `You have been removed from the Rain Employees Database`,
+                                };
+
+                                const info = await transporter.sendMail(
+                                  deletedEmployee
+                                );
+
+                                response.json(
+                                  `${email} has been removed successfully!`
+                                );
+                              }
+                            );
+                          }
+                        } else {
+                          response.json(`No password Entered!`);
+                        }
+                      }
+                    }
+                  );
                 }
               }
             }
@@ -583,5 +575,36 @@ router
       }
     );
   });
+// ******************************************* //
+
+// selects hod from 'view-hod' and shows all employees in that department
+router.route("/:email").get((request, response, next) => {
+  const { email } = request.params;
+
+  pool.query(`SELECT * FROM hod WHERE email=($1)`, [email], (err, res) => {
+    if (err) return next(err);
+
+    if (res.rows.length === 0) {
+      response.json(`No Hod!`);
+    } else {
+      hodDepartment = res.rows[0].department;
+
+      pool.query(
+        `SELECT * FROM employees WHERE department=($1)`,
+        [hodDepartment],
+        (err, res) => {
+          if (err) return next(err);
+
+          if (res.rows.length === 0) {
+            response.json(`No Department!`);
+          } else {
+            response.json(res.rows);
+          }
+        }
+      );
+    }
+  });
+});
+
 // ******************************************* //
 module.exports = router;
