@@ -139,6 +139,31 @@ router.route("/view-hod").get((request, response, next) => {
   );
 });
 
+// tasks
+router
+  .route("/tasks")
+  .get((request, response, next) => {
+    let employeeEmail = request.employee.email;
+
+    pool.query(
+      `SELECT * FROM tasks WHERE assignee=($1)`,
+      [employeeEmail],
+      (err, res) => {
+        if (err) return next(err);
+
+        if (res.rows.length === 0) {
+          response.json(`No tasks assigned to ${employeeEmail}`);
+        } else {
+          response.json(res.rows);
+        }
+      }
+    );
+  })
+  // progress
+  .put((request, response, next) => {})
+  // complete
+  .delete((request, response, next) => {});
+
 // single employee
 router.route("/employees/:email").get((request, response, next) => {
   const { email } = request.params;

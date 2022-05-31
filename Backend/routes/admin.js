@@ -590,6 +590,100 @@ router
 
 // ******************************************* //
 
+router
+  .route("/tasks")
+  .get((request, response, next) => {
+    pool.query(`SELECT * FROM tasks ORDER BY id DESC`, (err, res) => {
+      if (err) return next(err);
+
+      if (res.rows.length === 0) {
+        response.json(`No Tasks in the RainSA database!`);
+      } else {
+        response.json(res.rows);
+      }
+    });
+  })
+  .post(
+    [check("assignee", "Please enter a valid email!").isEmail()],
+    (request, response, next) => {
+      try {
+        const {
+          name,
+          description,
+          assignee,
+          start_date,
+          due_date,
+          progress,
+          team_members,
+        } = request.body;
+
+        if (!name || name === " " || !description || description === " ") {
+          response.json(
+            `Input values missing! Please provide an email to add an Admin!`
+          );
+        } else {
+          const errors = validationResult(request);
+
+          if (assignee) {
+            if (!errors.isEmpty()) {
+              return response.status(400).json({
+                errors: errors.array(),
+              });
+            }
+            pool.query(
+              `SELECT * FROM employees WHERE email=($1)`,
+              [assignee],
+              (err, res) => {
+                if (err) return next(err);
+
+                if (res.rows.length === 0) {
+                  response.json(`${assignee} is not a RainSA employee!`);
+                }
+              }
+            );
+          }
+
+          const adminEmail = request.admin.email;
+          pool.query(
+            `SELECT * FROM admin WHERE email=($1)`,
+            [adminEmail],
+            (err, res) => {
+              if (err) return next(err);
+
+              if (res.rows.length === 0) {
+                response.json(`No admin!`);
+              } else {
+                pool.query(
+                  `INSERT INTO tasks(name, description, assignee, start_date, due_date, progress, team_members, project_manager) 
+                  VALUES($1, $2, $3, $4, $5, $6, $7, $8)`,
+                  [
+                    name,
+                    description,
+                    assignee,
+                    start_date,
+                    due_date,
+                    progress,
+                    team_members,
+                    adminEmail,
+                  ],
+                  (err, res) => {
+                    if (err) return next(err);
+
+                    response.json(`task has been given!`);
+                  }
+                );
+              }
+            }
+          );
+        }
+      } catch {
+        response.status(500).send();
+      }
+    }
+  );
+
+// ******************************************* //
+
 // ________________________________________________ //
 // ************ ROUTES FOR SINGLE USERS *********** //
 // ________________________________________________ //

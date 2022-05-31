@@ -319,6 +319,131 @@ router
 
 // ******************************************* //
 
+router.route("/tasks-hod").get((request, response, next) => {
+  let hodEmail = request.hod.email;
+  pool.query(
+    `SELECT * FROM tasks WHERE assignee=($1)`,
+    [hodEmail],
+    (err, res) => {
+      if (err) return next(err);
+
+      if (res.rows.length === 0) {
+        response.json(`No tasks assigned to ${hodEmail}`);
+      } else {
+        response.json(res.rows);
+      }
+    }
+  );
+});
+
+// ******************************************* //
+
+router
+  .route("/tasks-employees")
+  .get((request, response, next) => {
+    pool.query(
+      `SELECT * FROM tasks WHERE project_manager=($1)`,
+      [request.hod.email],
+      (err, res) => {
+        if (err) return next(err);
+
+        if (res.rows.length === 0) {
+          response.json(`No Tasks in the hod database!`);
+        } else {
+          response.json(res.rows);
+        }
+      }
+    );
+  })
+  .post((request, response, next) => {
+    try {
+      const {
+        name,
+        description,
+        assignee,
+        start_date,
+        due_date,
+        progress,
+        team_members,
+      } = request.body;
+
+      if (!name || name === " " || !description || description === " ") {
+        response.json(
+          `Input values missing! Please provide an email to add an Admin!`
+        );
+      } else {
+        if (assignee) {
+          pool.query(
+            `SELECT * FROM employees WHERE email=($1)`,
+            [assignee],
+            (err, res) => {
+              if (err) return next(err);
+
+              let employeeDepartment = res.rows[0].department;
+              let hodEmail = request.hod.email;
+              pool.query(
+                `SELECT * FROM hod WHERE email=($1)`,
+                [hodEmail],
+                (err, res) => {
+                  if (err) return next(err);
+
+                  if (res.rows.length === 0) {
+                    response.json(`No Hod`);
+                  } else {
+                    let hodDepartment = res.rows[0].department;
+
+                    if (employeeDepartment !== hodDepartment) {
+                      response.json(
+                        `${assignee} is not part of ${hodDepartment}`
+                      );
+                    }
+                  }
+                }
+              );
+            }
+          );
+        }
+
+        const adminEmail = request.admin.email;
+        pool.query(
+          `SELECT * FROM admin WHERE email=($1)`,
+          [adminEmail],
+          (err, res) => {
+            if (err) return next(err);
+
+            if (res.rows.length === 0) {
+              response.json(`No admin!`);
+            } else {
+              pool.query(
+                `INSERT INTO tasks(name, description, assignee, start_date, due_date, progress, team_members, project_manager) 
+                  VALUES($1, $2, $3, $4, $5, $6, $7, $8)`,
+                [
+                  name,
+                  description,
+                  assignee,
+                  start_date,
+                  due_date,
+                  progress,
+                  team_members,
+                  adminEmail,
+                ],
+                (err, res) => {
+                  if (err) return next(err);
+
+                  response.json(`task has been given!`);
+                }
+              );
+            }
+          }
+        );
+      }
+    } catch {
+      response.status(500).send();
+    }
+  });
+
+// ******************************************* //
+
 router
   // view all the hod's in the database
   .route("/view-hod")

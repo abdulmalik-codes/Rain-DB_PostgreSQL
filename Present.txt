@@ -1,0 +1,131 @@
+So basically there are three types of users
+
+Admin, Hod and employee
+
+Admin has overall rights 
+Add, view, update and delete both hod and employee users
+
+Hod can also Add, view, update and delete employees but not other hod users
+Hod can also edit and view his own details
+
+employees can only edit and view their details
+
+There is also routes available for all users to see who is in the db
+
+
+Backend: NodeJS
+SQL: PostgreSQL
+Webframework: Express
+
+
+Postgres:
+
+Admin, Employees and Tasks tables
+
+ 
+
+___________________________
+
+*** ALL ROUTES ***
+__________________________
+
+*** ADMIN ***
+-View admin (get)
+-Add admin (post)
+
+*** DEPARTMENTS ***
+-View departments (get)
+-Add department (post)
+
+*** HOD ***
+-View hod (get)
+-Add hod (post)
+
+*** Employees ***
+-View employees (get)
+-Add employees (post)
+
+*** Departments with Hod ***
+-View (get)
+
+*** Departments with employees ***
+-View (get)
+
+___________________________
+
+*** SINGLE ROUTES ***
+__________________________
+
+*** ADMIN ***
+-View
+-Edit
+-Delete
+
+*** Employee ***
+-View
+-Update
+-Delete
+
+*** HOD ***
+-View
+-Update
+-Delete
+
+
+
+_____________
+
+ Admin Route
+_____________
+
+
+Jwt Authenticate Admin
+Access token created with Admin object from request body
+
+-Admin users:
+
+All - Add, Get
+Single - Edit, View, Delete
+
+****************************
+
+-Departments:
+
+All - Add, Get
+Hod - View 
+Employees - View
+
+****************************
+
+-Employees:
+
+All - Add, Get
+Single - Edit, View, Delete
+
+****************************
+
+-Hod: 
+
+All - Add, Get
+Single - Edit, View, Delete
+
+****************************
+
+_____________________________________
+
+_____________
+
+ Hod Route
+_____________
+
+Jwt authenticated Hod
+
+Login and view
+
+
+
+
+
+
+
+

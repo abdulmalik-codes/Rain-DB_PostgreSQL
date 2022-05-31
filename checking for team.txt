@@ -1,0 +1,77 @@
+if (team_members) {
+            pool.query(
+              `SELECT * FROM employees WHERE email in ${[team_members]}`,
+
+              (err, res) => {
+                if (err) return next(err);
+
+                console.log(res.rows);
+
+                if (res.rows.length === 0) {
+                  // noneExistingEmployees.push(team_member);
+                  // console.log(noneExistingEmployees, "noneExistingEmployees");
+                  console.log(res.rows);
+                }
+              }
+            );
+
+            return "";
+            existingEmployees = [];
+
+            noneExistingEmployees = [];
+
+            team_members.forEach((team_member) => {
+              // console.log(member);
+              // return member;
+              /*
+              pool.query(
+                `SELECT * FROM employees WHERE email in ($1)`,
+                [team_member],
+                (err, res) => {
+                  if (err) return next(err);
+
+                  if (res.rows.length === 0) {
+                    noneExistingEmployees.push(team_member);
+                    console.log(noneExistingEmployees, "noneExistingEmployees");
+                  }
+                }
+              );
+              */
+            });
+            console.log(member, ">>>>>member");
+
+            return "";
+
+            pool.query(
+              `SELECT * FROM employees WHERE email=($1)`,
+              [member],
+              (err, res) => {
+                if (err) return next(err);
+
+                if (res.rows.length === 0) {
+                  noneExistingEmployees.push(team_member);
+                  console.log(noneExistingEmployees, "noneExistingEmployees");
+                }
+              }
+            );
+            return noneExistingEmployees;
+
+            console.log(noneExistingEmployees, "final log");
+
+            // pool.query(
+            //   `SELECT * FROM employees WHERE email=($1)`,
+            //   [],
+            //   (err, res) => {
+            //     if (err) return next(err);
+            //     console.log(">>>>>>>>", res.rows);
+
+            //     if (res.rows.length === 0) {
+            //       noneExistingEmployees.push();
+            //     }
+            //   }
+            // );
+
+            // console.log(member);
+            // console.log(noneExistingEmployees);
+            // response.json(`${noneExistingEmployees} not exist`);
+          }
