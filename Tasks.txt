@@ -1,0 +1,35 @@
+Tasks:
+
+
+-ADMIN
+
+view and post to all
+
+
+-HOD
+
+
+*hod-task
+
+view all
+view single
+update
+
+
+*employee-task
+
+view all
+view single
+edit
+post
+
+
+
+-EMPLOYEE
+
+view all
+view single
+edit
+
+
+

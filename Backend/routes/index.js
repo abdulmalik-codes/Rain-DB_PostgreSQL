@@ -8,7 +8,6 @@ const router = Router();
 const admin = require("./admin");
 const hod = require("./hod");
 const employee = require("./employee");
-const tasks = require("./task");
 const login = require("./login");
 const forgotPassword = require("./forgotPassword");
 
@@ -20,7 +19,6 @@ router.use("/admin", accessTokens.adminToken, admin);
 router.use("/hod", accessTokens.hodToken, hod);
 router.use("/employee", accessTokens.employeeToken, employee);
 router.use("/login", login);
-router.use("/tasks", tasks);
 router.use("/forgot-password", forgotPassword);
 
 module.exports = router;

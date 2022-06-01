@@ -140,29 +140,23 @@ router.route("/view-hod").get((request, response, next) => {
 });
 
 // tasks
-router
-  .route("/tasks")
-  .get((request, response, next) => {
-    let employeeEmail = request.employee.email;
+router.route("/tasks").get((request, response, next) => {
+  let employeeEmail = request.employee.email;
 
-    pool.query(
-      `SELECT * FROM tasks WHERE assignee=($1)`,
-      [employeeEmail],
-      (err, res) => {
-        if (err) return next(err);
+  pool.query(
+    `SELECT * FROM tasks WHERE assignee=($1)`,
+    [employeeEmail],
+    (err, res) => {
+      if (err) return next(err);
 
-        if (res.rows.length === 0) {
-          response.json(`No tasks assigned to ${employeeEmail}`);
-        } else {
-          response.json(res.rows);
-        }
+      if (res.rows.length === 0) {
+        response.json(`No tasks assigned to ${employeeEmail}`);
+      } else {
+        response.json(res.rows);
       }
-    );
-  })
-  // progress
-  .put((request, response, next) => {})
-  // complete
-  .delete((request, response, next) => {});
+    }
+  );
+});
 
 // single employee
 router.route("/employees/:email").get((request, response, next) => {
@@ -221,7 +215,69 @@ router
       }
     );
   })
-  .put((request, response, next) => {});
+  // start task
+  .put((request, response, next) => {
+    const employeeEmail = request.employee.email;
+    const { name } = request.params;
+    pool.query(
+      `SELECT * FROM tasks WHERE assignee=($1)`,
+      [employeeEmail],
+      (err, res) => {
+        if (err) return next(err);
+
+        if (res.rows.length === 0) {
+          response.json(`No tasks assigned to ${employeeEmail}`);
+        } else {
+          pool.query(
+            `SELECT * FROM tasks WHERE name=($1)`,
+            [name],
+            (err, res) => {
+              if (err) return next(err);
+
+              if (res.rows.length === 0) {
+                response.json(`${name} is not a task!`);
+              } else {
+                let assignee = res.rows[0].assignee;
+
+                if (assignee !== employeeEmail) {
+                  response.json(`${name} is not assigned to ${employeeEmail}!`);
+                } else {
+                  const keys = ["start_date", "progress", "team_members"];
+                  const details = [];
+
+                  keys.forEach((key) => {
+                    if (request.body[key] && request.body[key] !== " ") {
+                      details.push(key);
+                    }
+                  });
+
+                  if (details.length === 0) {
+                    response.json(
+                      `Input values missing! Please insert into all required fields!`
+                    );
+                  } else {
+                    details.forEach((detail) => {
+                      pool.query(
+                        `UPDATE tasks SET ${detail}=($1) WHERE name=($2)`,
+                        [request.body[detail], name],
+                        (err, res) => {
+                          if (err) return next(err);
+
+                          response.json(
+                            `${name} has been updated by ${employeeEmail}`
+                          );
+                        }
+                      );
+                    });
+                  }
+                }
+              }
+            }
+          );
+        }
+      }
+    );
+  });
 
 // ******************************************* //
 
@@ -233,7 +289,7 @@ router.route("/:email").get((request, response, next) => {
     if (err) return next(err);
 
     if (res.rows.length === 0) {
-      response.json(`No Hod!`);
+      response.json(`${email} not a Hod!`);
     } else {
       hodDepartment = res.rows[0].department;
 

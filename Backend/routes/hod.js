@@ -496,7 +496,109 @@ router
       }
     );
   })
-  .put((request, response, next) => {});
+  .put((request, response, next) => {
+    const hodEmail = request.hod.email;
+    const { name } = request.params;
+    pool.query(
+      `SELECT * FROM tasks WHERE assignee=($1)`,
+      [hodEmail],
+      (err, res) => {
+        if (err) return next(err);
+
+        if (res.rows.length === 0) {
+          response.json(`No tasks assigned to ${hodEmail}`);
+        } else {
+          pool.query(
+            `SELECT * FROM tasks WHERE name=($1)`,
+            [name],
+            (err, res) => {
+              if (err) return next(err);
+
+              if (res.rows.length === 0) {
+                response.json(`${name} is not a task!`);
+              } else {
+                let assignee = res.rows[0].assignee;
+
+                if (assignee !== hodEmail) {
+                  response.json(`${name} is not assigned to ${hodEmail}!`);
+                } else {
+                  const keys = ["description", "due_date", "team_members"];
+                  const details = [];
+
+                  keys.forEach((key) => {
+                    if (request.body[key] && request.body[key] !== " ") {
+                      details.push(key);
+                    }
+                  });
+
+                  if (details.length === 0) {
+                    response.json(
+                      `Input values missing! Please insert into all required fields!`
+                    );
+                  } else {
+                    details.forEach((detail) => {
+                      pool.query(
+                        `UPDATE tasks SET ${detail}=($1) WHERE name=($2)`,
+                        [request.body[detail], name],
+                        (err, res) => {
+                          if (err) return next(err);
+                        }
+                      );
+                    });
+
+                    pool.query(
+                      `SELECT * FROM tasks WHERE name=($1)`,
+                      [name],
+                      async (err, res) => {
+                        if (err) return next(err);
+
+                        if (res.rows.length === 0) {
+                          response.json(`No response!`);
+                        } else {
+                          description = res.rows[0].description;
+                          assignee = res.rows[0].assignee;
+                          due_date = res.rows[0].due_date;
+                          team_members = res.rows[0].team_members;
+
+                          let updatedHodTask = {
+                            from: "62545a@gmail.com",
+                            to: `${assignee}`,
+                            subject: `RainSA - Your tasks updated successfully!`,
+                            text: `Hello ${assignee}, 
+                        
+                              Your tasks have been updated...
+                                
+                              ${name}, 
+                              
+                              ${description}, 
+                              
+                              due date: ${due_date}, 
+                              
+                              team: ${team_members}.                              
+                              
+                              
+                              MyRain`,
+                          };
+
+                          const info = await transporter.sendMail(
+                            updatedHodTask
+                          );
+
+                          response.json(
+                            `${assignee}'s tasks updated successfully!`
+                          );
+                        }
+                      }
+                    );
+                  }
+                }
+              }
+            }
+          );
+        }
+      }
+    );
+  });
 
 // ******************************************* //
 router
@@ -553,7 +655,123 @@ router
       }
     });
   })
-  .put((request, response, next) => {})
+  .put((request, response, next) => {
+    const { name } = request.params;
+    const hodEmail = request.hod.email;
+    pool.query(`SELECT * FROM tasks WHERE name=($1)`, [name], (err, res) => {
+      if (err) return next(err);
+
+      if (res.rows.length === 0) {
+        response.json(`${name} task does not exist!`);
+      } else {
+        const assignee = res.rows[0].assignee;
+        pool.query(
+          `SELECT department FROM employees WHERE email=($1)`,
+          [assignee],
+          (err, res) => {
+            if (err) return next(err);
+
+            if (res.rows.length === 0) {
+              response.json(`No response!`);
+            } else {
+              const employeeDepartment = res.rows[0].department;
+
+              pool.query(
+                `SELECT department FROM employees WHERE email=($1)`,
+                [hodEmail],
+                (err, res) => {
+                  if (err) return next(err);
+
+                  hodDepartment = res.rows[0].department;
+
+                  if (employeeDepartment !== hodDepartment) {
+                    response.json(
+                      `You are trying to edit ${name} that's assigned to an employee in ${employeeDepartment}`
+                    );
+                  } else {
+                    const keys = [
+                      "description",
+                      "assignee",
+                      "due_date",
+                      "team_members",
+                    ];
+                    const details = [];
+
+                    keys.forEach((key) => {
+                      if (request.body[key] && request.body[key] !== " ") {
+                        details.push(key);
+                      }
+                    });
+
+                    if (details.length === 0) {
+                      response.json(
+                        `Input values missing! Please insert into all required fields!`
+                      );
+                    } else {
+                      details.forEach((detail) => {
+                        pool.query(
+                          `UPDATE tasks SET ${detail}=($1) WHERE name=($2)`,
+                          [request.body[detail], name],
+                          (err, res) => {
+                            if (err) return next(err);
+                          }
+                        );
+                      });
+
+                      pool.query(
+                        `SELECT * FROM tasks WHERE name=($1)`,
+                        [name],
+                        async (err, res) => {
+                          if (err) return next(err);
+
+                          if (res.rows.length === 0) {
+                            response.json(`No response!`);
+                          } else {
+                            description = res.rows[0].description;
+                            assignee = res.rows[0].assignee;
+                            due_date = res.rows[0].due_date;
+                            team_members = res.rows[0].team_members;
+
+                            let updatedEmployeeTask = {
+                              from: "62545a@gmail.com",
+                              to: `${assignee}`,
+                              subject: `RainSA - Your tasks updated successfully!`,
+                              text: `Hello ${assignee}, 
+                          
+                                Your tasks have been updated...
+                                  
+                                ${name}, 
+                                
+                                ${description}, 
+                                
+                                due date: ${due_date}, 
+                                
+                                team: ${team_members}.                              
+                                
+                                
+                                Head of ${hodDepartment}`,
+                            };
+
+                            const info = await transporter.sendMail(
+                              updatedEmployeeTask
+                            );
+
+                            response.json(
+                              `${assignee}'s tasks updated successfully!`
+                            );
+                          }
+                        }
+                      );
+                    }
+                  }
+                }
+              );
+            }
+          }
+        );
+      }
+    });
+  })
   .delete((request, response, next) => {});
 
 // ******************************************* //
@@ -577,7 +795,6 @@ router
       }
     );
   })
-  // should only edit own employees, get from delete
   .put((request, response, next) => {
     const hodEmail = request.hod.email;
     const { email } = request.params;
