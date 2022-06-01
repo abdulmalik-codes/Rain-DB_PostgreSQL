@@ -183,6 +183,48 @@ router.route("/employees/:email").get((request, response, next) => {
   );
 });
 
+// ******************************************* //
+router
+  .route("/tasks/:name")
+  .get((request, response, next) => {
+    const employeeEmail = request.employee.email;
+    const { name } = request.params;
+    pool.query(
+      `SELECT * FROM tasks WHERE assignee=($1)`,
+      [employeeEmail],
+      (err, res) => {
+        if (err) return next(err);
+
+        if (res.rows.length === 0) {
+          response.json(`No tasks assigned to ${employeeEmail}`);
+        } else {
+          pool.query(
+            `SELECT * FROM tasks WHERE name=($1)`,
+            [name],
+            (err, res) => {
+              if (err) return next(err);
+
+              if (res.rows.length === 0) {
+                response.json(`${name} is not a task!`);
+              } else {
+                let assignee = res.rows[0].assignee;
+
+                if (assignee !== employeeEmail) {
+                  response.json(`${name} is not assigned to ${employeeEmail}!`);
+                } else {
+                  response.json(res.rows);
+                }
+              }
+            }
+          );
+        }
+      }
+    );
+  })
+  .put((request, response, next) => {});
+
+// ******************************************* //
+
 // view department and it's employees
 router.route("/:email").get((request, response, next) => {
   const { email } = request.params;

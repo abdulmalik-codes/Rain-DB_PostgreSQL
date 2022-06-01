@@ -1,4 +1,4 @@
-const { Router } = require("express");
+const { Router, response } = require("express");
 const router = Router();
 
 const bcrypt = require("bcrypt");
@@ -21,7 +21,7 @@ router
       if (err) return next(err);
 
       if (res.rows.length === 0) {
-        response.json(`Hod not assigned!`);
+        response.json(`${email} not assigned!`);
       } else {
         pool.query(
           `SELECT * FROM employees WHERE email=($1)`,
@@ -41,7 +41,6 @@ router
     try {
       // getting the email from the path
       const email = request.hod.email;
-      // let { name, surname, cell, password } = request.body;
 
       pool.query(`SELECT * FROM hod WHERE email=($1)`, [email], (err, res) => {
         if (err) return next(err);
@@ -98,36 +97,32 @@ router
                       pool.query(
                         `UPDATE employees SET password=($1) WHERE email=($2)`,
                         [hashedPassword, email],
-                        async (err, res) => {
+                        (err, res) => {
                           if (err) return next(err);
-
-                          let updatedHodEmail = {
-                            from: "62545a@gmail.com",
-                            to: `${email}`,
-                            subject: `RainSA - Your details updated successfully!`,
-                            text: `Hello ${name}, 
-                        
-                        You recently updated your details on your Rain Employee profile.
-                        Here are your updated credentials...
-              
-                        name: ${name}, surname: ${surname}, cell: ${cell}.
-              
-                        and to request your password you can click on this link: https://raindbpsql.netlify.app/forgot-password .
-              
-                        Thank you and let it Rain!
-              
-                        Rain Admin`,
-                          };
-
-                          const info = await transporter.sendMail(
-                            updatedHodEmail
-                          );
-
-                          response.json(
-                            `${email}'s details updated successfully!`
-                          );
                         }
                       );
+
+                      let updatedHodEmail = {
+                        from: "62545a@gmail.com",
+                        to: `${email}`,
+                        subject: `RainSA - Your details updated successfully!`,
+                        text: `Hello ${name}, 
+                    
+                        You recently updated your details on your Rain Employee profile.
+                        Here are your updated credentials...
+                          
+                        name: ${name}, surname: ${surname}, cell: ${cell}.
+                          
+                        and to request your password you can click on this link: https://raindbpsql.netlify.app/forgot-password .
+                          
+                        Thank you and let it Rain!
+                          
+                        Rain Admin`,
+                      };
+
+                      const info = await transporter.sendMail(updatedHodEmail);
+
+                      response.json(`${email}'s details updated successfully!`);
                     }
                   );
                 }
@@ -278,20 +273,18 @@ router
                             subject: `Welcome to RainSA's ${department} department`,
                             text: `Hello ${name},                                
     
-                        You have been successfully added to the Rain Employees database in the ${department} department.
-                                                      
-                        Log into your account with your email: '${email}' and password: '${password}'.
-                                                      
-                        NB! MAKE SURE TO CHANGE YOUR PASSWORD!!!
-                                                      
-                        link: ${rainUrl}
-                                                      
-                        Thank you and let it Rain!
-                                                      
-                        ${hodEmail}
-                        Rain Head of ${department}                      
+                            You have been successfully added to the Rain Employees database in the ${department} department.
 
-                        `,
+                            Log into your account with your email: '${email}' and password: '${password}'.
+
+                            NB! MAKE SURE TO CHANGE YOUR PASSWORD!!!
+
+                            link: ${rainUrl}
+
+                            Thank you and let it Rain!
+
+                            ${hodEmail}
+                            Rain Head of ${department}`,
                           };
 
                           // once email is set up, it gets sent
@@ -301,7 +294,9 @@ router
 
                           response
                             .status(201)
-                            .json(`${department} employee added successfully`);
+                            .json(
+                              `${email} added to ${department} successfully!`
+                            );
                         }
                       );
                     }
@@ -367,20 +362,30 @@ router
         team_members,
       } = request.body;
 
-      if (!name || name === " " || !description || description === " ") {
-        response.json(
-          `Input values missing! Please provide an email to add an Admin!`
-        );
+      if (
+        !name ||
+        name === " " ||
+        !description ||
+        description === " " ||
+        !assignee ||
+        assignee === " " ||
+        !due_date ||
+        due_date === " "
+      ) {
+        response.json(`Input values missing!`);
       } else {
-        if (assignee) {
-          pool.query(
-            `SELECT * FROM employees WHERE email=($1)`,
-            [assignee],
-            (err, res) => {
-              if (err) return next(err);
+        pool.query(
+          `SELECT * FROM employees WHERE email=($1)`,
+          [assignee],
+          (err, res) => {
+            if (err) return next(err);
 
+            if (res.rows.length === 0) {
+              response.json(`${assignee} not a RainSA employee!`);
+            } else {
               let employeeDepartment = res.rows[0].department;
               let hodEmail = request.hod.email;
+
               pool.query(
                 `SELECT * FROM hod WHERE email=($1)`,
                 [hodEmail],
@@ -388,7 +393,7 @@ router
                   if (err) return next(err);
 
                   if (res.rows.length === 0) {
-                    response.json(`No Hod`);
+                    response.json(`${hodEmail} not a RainSA Hod!`);
                   } else {
                     let hodDepartment = res.rows[0].department;
 
@@ -396,41 +401,30 @@ router
                       response.json(
                         `${assignee} is not part of ${hodDepartment}`
                       );
+                    } else {
+                      pool.query(
+                        `INSERT INTO tasks(name, description, assignee, start_date, due_date, progress, team_members, project_manager) 
+                          VALUES($1, $2, $3, $4, $5, $6, $7, $8)`,
+                        [
+                          name,
+                          description,
+                          assignee,
+                          start_date,
+                          due_date,
+                          progress,
+                          team_members,
+                          hodEmail,
+                        ],
+                        (err, res) => {
+                          if (err) return next(err);
+
+                          response.json(
+                            `${hodEmail} assigned task to ${assignee}!`
+                          );
+                        }
+                      );
                     }
                   }
-                }
-              );
-            }
-          );
-        }
-
-        const adminEmail = request.admin.email;
-        pool.query(
-          `SELECT * FROM admin WHERE email=($1)`,
-          [adminEmail],
-          (err, res) => {
-            if (err) return next(err);
-
-            if (res.rows.length === 0) {
-              response.json(`No admin!`);
-            } else {
-              pool.query(
-                `INSERT INTO tasks(name, description, assignee, start_date, due_date, progress, team_members, project_manager) 
-                  VALUES($1, $2, $3, $4, $5, $6, $7, $8)`,
-                [
-                  name,
-                  description,
-                  assignee,
-                  start_date,
-                  due_date,
-                  progress,
-                  team_members,
-                  adminEmail,
-                ],
-                (err, res) => {
-                  if (err) return next(err);
-
-                  response.json(`task has been given!`);
                 }
               );
             }
@@ -462,6 +456,105 @@ router
       }
     );
   });
+
+// ******************************************* //
+
+router
+  .route("/tasks-hod/:name")
+  .get((request, response, next) => {
+    const hodEmail = request.hod.email;
+    const { name } = request.params;
+    pool.query(
+      `SELECT * FROM tasks WHERE assignee=($1)`,
+      [hodEmail],
+      (err, res) => {
+        if (err) return next(err);
+
+        if (res.rows.length === 0) {
+          response.json(`No tasks assigned to ${hodEmail}`);
+        } else {
+          pool.query(
+            `SELECT * FROM tasks WHERE name=($1)`,
+            [name],
+            (err, res) => {
+              if (err) return next(err);
+
+              if (res.rows.length === 0) {
+                response.json(`${name} is not a task!`);
+              } else {
+                let assignee = res.rows[0].assignee;
+
+                if (assignee !== hodEmail) {
+                  response.json(`${name} is not assigned to ${hodEmail}!`);
+                } else {
+                  response.json(res.rows);
+                }
+              }
+            }
+          );
+        }
+      }
+    );
+  })
+  .put((request, response, next) => {});
+
+// ******************************************* //
+router
+  .route("/tasks-employees/:name")
+  .get((request, response, next) => {
+    const { name } = request.params;
+    const hodEmail = request.hod.email;
+    pool.query(`SELECT * FROM tasks WHERE name=($1)`, [name], (err, res) => {
+      if (err) return next(err);
+
+      if (res.rows.length === 0) {
+        response.json(`${name} task does not exist!`);
+      } else {
+        const assignee = res.rows[0].assignee;
+        pool.query(
+          `SELECT department FROM employees WHERE email=($1)`,
+          [assignee],
+          (err, res) => {
+            if (err) return next(err);
+
+            if (res.rows.length === 0) {
+              response.json(`No response!`);
+            } else {
+              const employeeDepartment = res.rows[0].department;
+
+              pool.query(
+                `SELECT department FROM employees WHERE email=($1)`,
+                [hodEmail],
+                (err, res) => {
+                  if (err) return next(err);
+
+                  hodDepartment = res.rows[0].department;
+
+                  if (employeeDepartment !== hodDepartment) {
+                    response.json(
+                      `You are trying to view ${name} that's assigned to an employee in ${employeeDepartment}`
+                    );
+                  } else {
+                    pool.query(
+                      `SELECT * FROM tasks WHERE name=($1)`,
+                      [name],
+                      (err, res) => {
+                        if (err) return next(err);
+
+                        response.json(res.rows);
+                      }
+                    );
+                  }
+                }
+              );
+            }
+          }
+        );
+      }
+    });
+  })
+  .put((request, response, next) => {})
+  .delete((request, response, next) => {});
 
 // ******************************************* //
 
@@ -504,103 +597,115 @@ router
             const department = res.rows[0].department;
             const departmentHod = res.rows[0].department;
 
+            const hodDepartment = res.rows[0].department;
+
             pool.query(
-              `SELECT * FROM employees WHERE department=($1)`,
-              [department],
+              `SELECT * FROM employees WHERE email=($1)`,
+              [email],
               (err, res) => {
                 if (err) return next(err);
 
                 if (res.rows.length === 0) {
-                  response.json(`No response!`);
+                  response.json(
+                    `${email} does not exist in RainSA employee database!`
+                  );
                 } else {
-                  const keys = [
-                    "name",
-                    "surname",
-                    "cell",
-                    "position",
-                    "department",
-                    "password",
-                  ];
-                  const details = [];
+                  employeeDepartment = res.rows[0].department;
 
-                  keys.forEach((key) => {
-                    if (request.body[key] && request.body[key] !== " ") {
-                      details.push(key);
-                    }
-                  });
-
-                  if (details.length === 0) {
+                  if (hodDepartment !== employeeDepartment) {
                     response.json(
-                      `Input values missing! Please insert into all required fields!`
+                      `${hodEmail} cannot update ${email} because employee is not part of ${hodDepartment}  `
                     );
                   } else {
-                    details.forEach((detail) => {
-                      pool.query(
-                        `UPDATE employees SET ${detail}=($1) WHERE email=($2)`,
-                        [request.body[detail], email],
-                        (err, res) => {
-                          if (err) return next(err);
-                        }
-                      );
+                    const keys = [
+                      "name",
+                      "surname",
+                      "cell",
+                      "position",
+                      "department",
+                      "password",
+                    ];
+                    const details = [];
+
+                    keys.forEach((key) => {
+                      if (request.body[key] && request.body[key] !== " ") {
+                        details.push(key);
+                      }
                     });
 
-                    pool.query(
-                      `SELECT * FROM employees WHERE email=($1)`,
-                      [email],
-                      async (err, res) => {
-                        if (err) return next(err);
+                    if (details.length === 0) {
+                      response.json(
+                        `Input values missing! Please insert into all required fields!`
+                      );
+                    } else {
+                      details.forEach((detail) => {
+                        pool.query(
+                          `UPDATE employees SET ${detail}=($1) WHERE email=($2)`,
+                          [request.body[detail], email],
+                          (err, res) => {
+                            if (err) return next(err);
+                          }
+                        );
+                      });
 
-                        if (res.rows.length === 0) {
-                          response.json(`No response!`);
-                        } else {
-                          name = res.rows[0].name;
-                          surname = res.rows[0].surname;
-                          cell = res.rows[0].cell;
-                          position = res.rows[0].position;
-                          employeeDepartment = res.rows[0].department;
+                      pool.query(
+                        `SELECT * FROM employees WHERE email=($1)`,
+                        [email],
+                        async (err, res) => {
+                          if (err) return next(err);
 
-                          password = res.rows[0].password;
-                          const hashedPassword = await bcrypt.hash(
-                            password,
-                            10
-                          );
+                          if (res.rows.length === 0) {
+                            response.json(`No response!`);
+                          } else {
+                            name = res.rows[0].name;
+                            surname = res.rows[0].surname;
+                            cell = res.rows[0].cell;
+                            position = res.rows[0].position;
+                            employeeDepartment = res.rows[0].department;
 
-                          pool.query(
-                            `UPDATE employees SET password=($1) WHERE email=($2)`,
-                            [hashedPassword, email],
-                            async (err, res) => {
-                              if (err) return next(err);
+                            password = res.rows[0].password;
+                            const hashedPassword = await bcrypt.hash(
+                              password,
+                              10
+                            );
 
-                              let updatedEmployeeEmail = {
-                                from: "62545a@gmail.com",
-                                to: `${email}`,
-                                subject: `RainSA - Your details updated successfully!`,
-                                text: `Hello ${name}, 
-                          
-                            Your details on your Rain Employee profile was recently updated by the Head of ${departmentHod}.
-                            Here are your updated credentials...
-                              
-                            name: ${name}, surname: ${surname}, cell: ${cell}, position: ${position}, department: ${employeeDepartment} .
-                              
-                            and to request your password you can click on this link: https://raindbpsql.netlify.app/forgot-password .
-                              
-                            Thank you and let it Rain!
-                              
-                            Head of ${departmentHod}`,
-                              };
+                            pool.query(
+                              `UPDATE employees SET password=($1) WHERE email=($2)`,
+                              [hashedPassword, email],
+                              async (err, res) => {
+                                if (err) return next(err);
 
-                              const info = await transporter.sendMail(
-                                updatedEmployeeEmail
-                              );
+                                let updatedEmployeeEmail = {
+                                  from: "62545a@gmail.com",
+                                  to: `${email}`,
+                                  subject: `RainSA - Your details updated successfully!`,
+                                  text: `Hello ${name}, 
+                            
+                                  Your details on your Rain Employee profile was recently updated by the Head of ${departmentHod}.
+                                  Here are your updated credentials...
+                                    
+                                  name: ${name}, surname: ${surname}, cell: ${cell}, position: ${position}, department: ${employeeDepartment} .
+                                    
+                                  and to request your password you can click on this link: https://raindbpsql.netlify.app/forgot-password .
+                                    
+                                  Thank you and let it Rain!
+                                    
+                                  Head of ${departmentHod}`,
+                                };
 
-                              response.json(
-                                `${email}'s details updated successfully!`
-                              );
-                            }
-                          );
+                                const info = await transporter.sendMail(
+                                  updatedEmployeeEmail
+                                );
+
+                                response.json(
+                                  `${email}'s details updated successfully!`
+                                );
+                              }
+                            );
+                          }
                         }
-                      }
-                    );
+                      );
+                    }
                   }
                 }
               }
@@ -710,7 +815,7 @@ router.route("/:email").get((request, response, next) => {
     if (err) return next(err);
 
     if (res.rows.length === 0) {
-      response.json(`No Hod!`);
+      response.json(`${email} not a Hod!`);
     } else {
       hodDepartment = res.rows[0].department;
 

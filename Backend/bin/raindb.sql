@@ -42,11 +42,11 @@
 
 -- CREATE TABLE IF NOT EXISTS tasks(
 --     id serial PRIMARY KEY,
---     name character varying(50) NOT NULL,
+--     name character varying(50) NOT NULL UNIQUE,
 --     description character varying(5760) NOT NULL,
---     assignee character varying(100),
+--     assignee character varying(100) NOT NULL,
 --     start_date character varying(50),
---     due_date character varying(50),
+--     due_date character varying(50) NOT NULL,
 --     progress character varying(100),
 --     team_members character varying(900),
 --     project_manager character varying(100) NOT NULL,
