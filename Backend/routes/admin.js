@@ -788,14 +788,6 @@ router
         }
       }
     );
-  })
-
-  // edit and delete  department
-  .put((request, response, next) => {
-    // THIS METHODS WILL NOT WORK!
-  })
-  .delete((request, response, next) => {
-    // NOT ABLE TO EDIT OR DELETE TABLES WITH FK CONSTRAINTS!
   });
 
 // ******************************************* //

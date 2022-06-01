@@ -34,4 +34,41 @@ router.route("/employees").post((request, response, next) => {
   );
 });
 
+// ******************************************* //
+// forgot password
+router.route("/forgot-password").get((request, response, next) => {
+  const hodEmail = request.hod.email;
+  const { email } = request.body;
+
+  pool.query(
+    `SELECT password FROM employees WHERE email=($1)`,
+    [hodEmail],
+    async (err, res) => {
+      if (err) return next(err);
+
+      if (res.rows.length === 0) {
+        response.json(`${hodEmail} not in database!`);
+      } else {
+        password = res.rows[0].password;
+
+        if (hodEmail !== email) {
+          response.json(`${email} not in RainSA database!`);
+        } else {
+        }
+
+        let forgotPasswordEmail = {
+          from: "62545a@gmail.com",
+          to: `${email}`,
+          subject: `Password reset`,
+          text: `Requested password for ${email} is: "${password}", login with email and password here: https://raindbpsql.netlify.app/ `,
+        };
+
+        const info = await transporter.sendMail(forgotPasswordEmail);
+
+        response.json("Please check your email");
+      }
+    }
+  );
+});
+
 module.exports = router;
