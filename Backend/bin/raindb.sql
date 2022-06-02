@@ -4,11 +4,14 @@
 -- DROP TABLE admin;
 -- DROP TABLE departments;
 -- DROP TABLE messages; 
+-- DROP TABLE images; 
+
 
 -- CREATE TABLE IF NOT EXISTS admin(
 --     id SERIAL PRIMARY KEY,
 --     email character varying(100) NOT NULL UNIQUE,
---     password character varying(200) NOT NULL
+--     password character varying(200) NOT NULL,
+--     profile_picture bytea
 -- );
 
 -- CREATE TABLE IF NOT EXISTS departments(
@@ -26,6 +29,7 @@
 --     joined character varying(100) NOT NULL,
 --     email character varying(100) NOT NULL UNIQUE,
 --     password character varying(100) NOT NULL,
+--     profile_picture bytea,
 --     FOREIGN KEY(department) REFERENCES departments (department)
 -- );
 
@@ -56,4 +60,11 @@
 
 -- CREATE TABLE IF NOT EXISTS messages(
 --     id SERIAL PRIMARY KEY,
+-- );
+
+
+-- CREATE TABLE IF NOT EXISTS images(
+--     id SERIAL PRIMARY KEY,
+--     name character varying(550),
+--     image bytea
 -- );

@@ -19,6 +19,9 @@ const pool = require("../configured/index");
 // connection to email service
 const transporter = require("../configured/email");
 
+// resize image
+const sharp = require("sharp");
+
 // global variables
 let rainUrl = `https://raindbpsql.netlify.app/`;
 
@@ -65,7 +68,7 @@ router
     // middleware to validate input
     [check("email", "Please enter a valid email!").isEmail()],
 
-    (request, response, next) => {
+    async (request, response, next) => {
       try {
         // getting email from request body (admins's inputs)
         const { email } = request.body;
@@ -100,6 +103,8 @@ router
               } else {
                 // if there is no response that means that the email is not in the db
 
+                let { data } = request.files.profile_picture;
+
                 // generate a random password
                 randomPassword = () => {
                   let password = "";
@@ -118,9 +123,9 @@ router
 
                 // once validation is completed and the password gets encrypted, we can now add the admin to the db
                 pool.query(
-                  `INSERT INTO admin(email, password) VALUES($1, $2)`,
+                  `INSERT INTO admin(email, password, profile_picture) VALUES($1, $2, $3)`,
                   // values takes an array
-                  [email, hashedPassword],
+                  [email, hashedPassword, data],
 
                   async (err, res) => {
                     if (err) return next(err);

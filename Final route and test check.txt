@@ -44,7 +44,7 @@ View single task ✓
 Update a task ✓
 
 ___________
-Admin PAGE
+Admin PAGE ✓
 ___________
 
 Login ✓
