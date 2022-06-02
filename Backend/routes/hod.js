@@ -403,24 +403,36 @@ router
                       );
                     } else {
                       pool.query(
-                        `INSERT INTO tasks(name, description, assignee, start_date, due_date, progress, team_members, project_manager) 
-                          VALUES($1, $2, $3, $4, $5, $6, $7, $8)`,
-                        [
-                          name,
-                          description,
-                          assignee,
-                          start_date,
-                          due_date,
-                          progress,
-                          team_members,
-                          hodEmail,
-                        ],
+                        `SELECT * FROM tasks WHERE name=($1)`,
+                        [name],
                         (err, res) => {
                           if (err) return next(err);
 
-                          response.json(
-                            `${hodEmail} assigned task to ${assignee}!`
-                          );
+                          if (res.rows.length > 0) {
+                            response.json(`${name} task is already assigned!`);
+                          } else {
+                            pool.query(
+                              `INSERT INTO tasks(name, description, assignee, start_date, due_date, progress, team_members, project_manager) 
+                                VALUES($1, $2, $3, $4, $5, $6, $7, $8)`,
+                              [
+                                name,
+                                description,
+                                assignee,
+                                start_date,
+                                due_date,
+                                progress,
+                                team_members,
+                                hodEmail,
+                              ],
+                              (err, res) => {
+                                if (err) return next(err);
+
+                                response.json(
+                                  `${hodEmail} assigned ${name} task to ${assignee}!`
+                                );
+                              }
+                            );
+                          }
                         }
                       );
                     }

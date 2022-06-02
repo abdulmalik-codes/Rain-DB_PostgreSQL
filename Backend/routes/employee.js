@@ -12,6 +12,7 @@ let rainUrl = `https://raindbpsql.netlify.app/`;
 // view employee
 router
   .route("/")
+  // View logged in employee
   .get((request, response, next) => {
     const { email } = request.employee;
 
@@ -30,7 +31,7 @@ router
     );
   })
 
-  // edit employee
+  // Edit logged in employee
   .put((request, response, next) => {
     try {
       const { email } = request.employee;
@@ -123,7 +124,7 @@ router
     }
   });
 
-// hod's
+// View Hod's
 router.route("/view-hod").get((request, response, next) => {
   pool.query(
     `SELECT email, department FROM hod ORDER BY id DESC`,
@@ -151,25 +152,6 @@ router.route("/tasks").get((request, response, next) => {
 
       if (res.rows.length === 0) {
         response.json(`No tasks assigned to ${employeeEmail}`);
-      } else {
-        response.json(res.rows);
-      }
-    }
-  );
-});
-
-// single employee
-router.route("/employees/:email").get((request, response, next) => {
-  const { email } = request.params;
-
-  pool.query(
-    `SELECT * FROM employees WHERE email=($1)`,
-    [email],
-    (err, res) => {
-      if (err) return next(err);
-
-      if (res.rows.length === 0) {
-        response.json(`${email} not a RainSA employee!`);
       } else {
         response.json(res.rows);
       }
@@ -281,8 +263,8 @@ router
 
 // ******************************************* //
 
-// view department and it's employees
-router.route("/:email").get((request, response, next) => {
+// View departments (from hod email)
+router.route("/view-departments/:email").get((request, response, next) => {
   const { email } = request.params;
 
   pool.query(`SELECT * FROM hod WHERE email=($1)`, [email], (err, res) => {
@@ -308,6 +290,25 @@ router.route("/:email").get((request, response, next) => {
       );
     }
   });
+});
+
+// single employee
+router.route("/:email").get((request, response, next) => {
+  const { email } = request.params;
+
+  pool.query(
+    `SELECT * FROM employees WHERE email=($1)`,
+    [email],
+    (err, res) => {
+      if (err) return next(err);
+
+      if (res.rows.length === 0) {
+        response.json(`${email} not a RainSA employee!`);
+      } else {
+        response.json(res.rows);
+      }
+    }
+  );
 });
 
 module.exports = router;

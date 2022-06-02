@@ -161,7 +161,10 @@ router
                       );
                       refreshTokens.push(refreshToken);
 
-                      response.json(accessToken);
+                      response.json({
+                        accessToken: accessToken,
+                        refreshToken: refreshToken,
+                      });
                     } else {
                       response.json(`Incorrect Password!`);
                     }

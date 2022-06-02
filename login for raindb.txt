@@ -1,5 +1,13 @@
 Admin - abdulmalikmohamed360@gmail.com - admin
 
-HOD - 62545a@gmail.com - hod123
+HOD - 62545a@gmail.com - software || abdul-malik.mohamed@rain.co.za - devops
 
-employee - abdul.malik.codes@gmail.com - password
+employee - abdul.malik.codes@gmail.com - newpassword
+
+
+abdul-malik.mohamed@rain.co.za:
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFiZHVsLW1hbGlrLm1vaGFtZWRAcmFpbi5jby56YSIsImlhdCI6MTY1NDE1NzAxMywiZXhwIjoxNjU0MjQzNDEzfQ.er0RPUkAziILAf7sXMw9qzzZMyBLTx3RWc-jNnlQPJ8
+
+62545a@gmail.com:
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6IjYyNTQ1YUBnbWFpbC5jb20iLCJpYXQiOjE2NTQxNTcxMjMsImV4cCI6MTY1NDI0MzUyM30._hByy4e56Jxb_Fukd51I954xxB0cWgd3WY44cgtLv04
+

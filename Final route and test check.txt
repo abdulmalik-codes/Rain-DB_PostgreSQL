@@ -1,0 +1,76 @@
+______________
+EMPLOYEE PAGE ✓
+______________
+
+Login ✓
+Forgot password ✓
+
+View logged in employee ✓
+Edit logged in employee ✓
+
+View Hod's ✓
+View departments (from hod email) ✓
+View single employees (from departments) ✓
+
+View all tasks assigned to employee ✓
+View single task ✓
+Update task ✓
+
+_________
+HOD PAGE ✓
+_________
+
+Login ✓
+
+View hod ✓
+Edit hod ✓ 
+
+View all hod ✓
+View departments ✓ 
+
+Add Employees ✓ 
+View Employees ✓ 
+View single employee ✓
+Edit employee ✓
+Delete employee ✓ 
+
+View all tasks assigned to hod ✓
+View single task ✓
+update task ✓
+
+assign an employee a task ✓
+View tasks ✓
+View single task ✓
+Update a task ✓
+
+___________
+Admin PAGE
+___________
+
+Login ✓
+
+Add admin ✓ 
+View admin ✓ 
+Edit admin ✓
+Delete admin ✓
+
+Add Departments ✓
+View Departments ✓
+View single department ✓
+View all hod ✓
+View employees in department ✓
+
+View all employees ✓
+Add Employees ✓
+View single employee ✓
+edit employee ✓ 
+delete employee ✓
+
+View all hod ✓
+Add hod ✓
+View single hod ✓
+Edit hod ✓
+Delete hod (demotes) ✓
+
+View tasks ✓
+Add tasks ✓
